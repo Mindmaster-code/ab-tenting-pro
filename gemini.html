@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard A/B Test Simplificado</title>
+  <title>Dashboard A/B Test com Gerenciamento e Snippets</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js CDN -->
@@ -27,6 +27,73 @@
     .test-card-status-no-data {
       border-left: 5px solid #6b7280; /* gray-500 */
     }
+     /* Estilos para Modais */
+    .modal-content-wrapper {
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+      max-height: 90vh;
+    }
+    .modal-hidden {
+      transform: translateY(-20px) scale(0.95);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .modal-visible {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .form-input, .form-select, .form-textarea {
+        /* Estas classes do Tailwind serão aplicadas diretamente nos elementos HTML */
+        /* Elas já definem bordas, padding, etc. que contrastarão com o novo fundo da seção */
+    }
+    .form-label {
+        @apply block text-sm font-medium text-gray-700; /* Mantendo @apply aqui pois é simples e geralmente funciona */
+    }
+    /* Custom scrollbar for modal body */
+    .modal-body-scrollable::-webkit-scrollbar {
+      width: 8px;
+    }
+    .modal-body-scrollable::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    .modal-body-scrollable::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
+    }
+    .modal-body-scrollable::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    .code-snippet-block pre {
+        background-color: #2d2d2d; 
+        color: #f8f8f2; 
+        padding: 1rem;
+        border-radius: 0.375rem; 
+        overflow-x: auto;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.875rem; 
+        line-height: 1.4;
+        margin-top: 0.5rem;
+    }
+    /* Design aprimorado para o formulário de configuração usando CSS padrão */
+    #config-form-view .form-section {
+        background-color: #f3f4f6; /* Tailwind bg-gray-100 */
+        padding: 1.5rem; /* Tailwind p-6 */
+        border-radius: 0.5rem; /* Tailwind rounded-lg */
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* Tailwind shadow */
+        border: 1px solid #d1d5db; /* Tailwind border-gray-300 */
+        margin-bottom: 1.5rem; /* Tailwind mb-6 */
+    }
+    #config-form-view .form-section-title {
+        font-size: 1.125rem; /* Equivalente a text-lg, um pouco menor que text-xl para mais harmonia */
+        font-weight: 600; /* Tailwind font-semibold */
+        color: #1f2937; /* Tailwind text-gray-800, um pouco mais suave que 900 */
+        margin-bottom: 1rem; /* Tailwind mb-4 */
+        border-bottom-width: 1px; /* Tailwind border-b */
+        border-bottom-color: #d1d5db; /* Tailwind border-gray-300 */
+        padding-bottom: 0.75rem; /* Tailwind pb-3 */
+    }
+
   </style>
   <!-- Importando a fonte Inter do Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -34,8 +101,16 @@
 <body class="bg-gray-100 text-gray-800">
   <div class="container mx-auto p-4 md:p-8">
     <header class="mb-8 text-center">
-      <h1 class="text-4xl font-bold text-gray-700">Dashboard de Testes A/B</h1>
-      <p class="text-lg text-gray-500 mt-2">Resultados e confiabilidade dos seus experimentos.</p>
+      <div class="flex justify-between items-center mb-4">
+        <div class="w-1/3"></div>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-700 w-1/3 text-center">Dashboard de Testes A/B</h1>
+        <div class="w-1/3 flex justify-end">
+            <button id="manage-tests-btn" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Gerenciar Testes
+            </button>
+        </div>
+      </div>
+      <p class="text-lg text-gray-500">Resultados, gerenciamento e snippets de implementação dos seus experimentos.</p>
     </header>
 
     <div id="loading-indicator" class="text-center py-10">
@@ -51,7 +126,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <p class="mt-4 text-xl text-gray-500">Nenhum teste encontrado.</p>
-        <p class="text-gray-400">Verifique se há testes cadastrados ou tente novamente mais tarde.</p>
+        <p class="text-gray-400">Verifique se há testes cadastrados ou tente gerenciar seus testes.</p>
     </div>
 
     <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -59,13 +134,161 @@
     </div>
   </div>
 
+  <!-- Modal de Gerenciamento de Configurações -->
+  <div id="config-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+    <div id="config-modal-content-wrapper" class="modal-content-wrapper modal-hidden bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col">
+      <div class="flex justify-between items-center p-5 border-b border-gray-200">
+        <h3 id="config-modal-title" class="text-xl font-semibold text-gray-800">Gerenciar Configurações de Teste</h3>
+        <button id="close-config-modal-btn" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div id="config-modal-body" class="p-6 overflow-y-auto modal-body-scrollable">
+        <div id="config-list-view">
+          <div class="flex justify-end mb-4">
+            <button id="create-new-test-btn" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700">
+              Criar Novo Teste
+            </button>
+          </div>
+          <div id="config-tests-list" class="space-y-3">
+            <p class="text-gray-500 text-center">Carregando lista de testes...</p>
+          </div>
+        </div>
+
+        <div id="config-form-view" class="hidden">
+          <form id="test-config-form" class="space-y-0"> 
+            
+            <div class="form-section">
+              <h4 class="form-section-title">Informações Básicas</h4>
+              <div class="space-y-4">
+                <div>
+                  <label for="testName" class="form-label">Nome do Teste <span class="text-red-500">*</span></label>
+                  <input type="text" name="testName" id="testName" class="form-input" required>
+                  <input type="hidden" name="originalTestName" id="originalTestName">
+                </div>
+                <div>
+                  <label for="variants" class="form-label">Variantes (separadas por vírgula) <span class="text-red-500">*</span></label>
+                  <input type="text" name="variants" id="variants" class="form-input" placeholder="Ex: Controle,VarianteB,VarianteC" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h4 class="form-section-title">Status e Período</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <label for="status" class="form-label">Status</label>
+                  <select name="status" id="status" class="form-select">
+                    <option value="active">Ativo</option>
+                    <option value="paused">Pausado</option>
+                    <option value="ended">Encerrado</option>
+                  </select>
+                </div>
+                <div></div> 
+                <div>
+                  <label for="startDate" class="form-label">Data de Início</label>
+                  <input type="date" name="startDate" id="startDate" class="form-input">
+                </div>
+                <div>
+                  <label for="endDate" class="form-label">Data de Fim (opcional)</label>
+                  <input type="date" name="endDate" id="endDate" class="form-input">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+                <h4 class="form-section-title">Meta e Observações</h4>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        <div>
+                            <label for="goalType" class="form-label">Tipo de Meta</label>
+                            <input type="text" name="goalType" id="goalType" class="form-input" value="conversion">
+                        </div>
+                        <div>
+                            <label for="goalValue" class="form-label">Valor da Meta (opcional)</label>
+                            <input type="text" name="goalValue" id="goalValue" class="form-input" placeholder="Ex: checkout_completed">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="notes" class="form-label">Notas (opcional)</label>
+                        <textarea name="notes" id="notes" rows="3" class="form-textarea" placeholder="Descreva o objetivo do teste, hipóteses, etc."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="form-error-message" class="text-red-600 text-sm mt-4 hidden"></div>
+            <div id="form-success-message" class="text-green-600 text-sm mt-4 hidden"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="p-5 border-t border-gray-200 flex justify-end space-x-3">
+        <button id="cancel-config-form-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 hidden">
+          Cancelar
+        </button>
+        <button id="save-config-btn" type="submit" form="test-config-form" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 hidden">
+          Salvar Configuração
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Snippet de Código -->
+  <div id="code-snippet-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-[60] hidden">
+    <div id="code-snippet-modal-content-wrapper" class="modal-content-wrapper modal-hidden bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col">
+        <div class="flex justify-between items-center p-5 border-b border-gray-200">
+            <h3 id="code-snippet-modal-title" class="text-xl font-semibold text-gray-800">Snippets de Implementação</h3>
+            <button id="close-code-snippet-modal-btn" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div id="code-snippet-modal-body" class="p-6 overflow-y-auto modal-body-scrollable space-y-6">
+            <!-- Snippets serão inseridos aqui -->
+        </div>
+        <div class="p-5 border-t border-gray-200 flex justify-start">
+            <button id="back-to-manage-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                &larr; Voltar para Gerenciamento
+            </button>
+        </div>
+    </div>
+  </div>
+
+
   <script>
     const BASE_URL = 'https://script.google.com/macros/s/AKfycbyTC4kNFXVQFGff81ryXDLD4kgEZ8yrSuJfzDkm6D8EdiD4sItH7n4_eRMlEc-kdHA/exec';
     const cardsContainer = document.getElementById('cards-container');
     const loadingIndicator = document.getElementById('loading-indicator');
     const noTestsMessage = document.getElementById('no-tests-message');
 
-    // Chart instances need to be tracked to destroy them before re-rendering
+    // Config Modal Elements
+    const manageTestsBtn = document.getElementById('manage-tests-btn');
+    const configModal = document.getElementById('config-modal');
+    const configModalContentWrapper = document.getElementById('config-modal-content-wrapper');
+    const configModalTitle = document.getElementById('config-modal-title');
+    const closeConfigModalBtn = document.getElementById('close-config-modal-btn');
+    const configListView = document.getElementById('config-list-view');
+    const configFormView = document.getElementById('config-form-view');
+    const createNewTestBtn = document.getElementById('create-new-test-btn');
+    const configTestsList = document.getElementById('config-tests-list');
+    const testConfigForm = document.getElementById('test-config-form');
+    const saveConfigBtn = document.getElementById('save-config-btn');
+    const cancelConfigFormBtn = document.getElementById('cancel-config-form-btn');
+    const formErrorMessage = document.getElementById('form-error-message');
+    const formSuccessMessage = document.getElementById('form-success-message');
+
+    // Code Snippet Modal Elements
+    const codeSnippetModal = document.getElementById('code-snippet-modal');
+    const codeSnippetModalContentWrapper = document.getElementById('code-snippet-modal-content-wrapper');
+    const codeSnippetModalTitle = document.getElementById('code-snippet-modal-title');
+    const closeCodeSnippetModalBtn = document.getElementById('close-code-snippet-modal-btn');
+    const codeSnippetModalBody = document.getElementById('code-snippet-modal-body');
+    const backToManageBtn = document.getElementById('back-to-manage-btn');
+
     const chartInstances = {};
 
     // --- API Fetching Functions ---
@@ -76,12 +299,12 @@
         const res = await fetch(`${BASE_URL}?${urlParams}&${cacheBuster}`);
         if (!res.ok) {
           console.error(`HTTP error! status: ${res.status} for params:`, params);
+          const errorText = await res.text();
           try {
-            const errorData = await res.json();
-            console.error("Error data from API:", errorData);
+            const errorData = JSON.parse(errorText);
             return { success: false, message: errorData.message || `Error ${res.status}`, error: errorData };
           } catch (e) {
-            return { success: false, message: `Error ${res.status}: ${res.statusText}` };
+            return { success: false, message: `Error ${res.status}: ${errorText}` };
           }
         }
         return res.json();
@@ -89,6 +312,30 @@
         console.error('Fetch error:', error, "Params:", params);
         return { success: false, message: 'Network error or invalid JSON response', error: error.toString() };
       }
+    }
+    
+    async function postRequest(action, data) {
+        try {
+            const res = await fetch(BASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, ...data }),
+            });
+            if (!res.ok) {
+                console.error(`HTTP error! status: ${res.status} for action: ${action}`);
+                const errorText = await res.text();
+                 try {
+                    const errorData = JSON.parse(errorText);
+                    return { success: false, message: errorData.message || `Error ${res.status}`, error: errorData };
+                } catch (e) {
+                    return { success: false, message: `Error ${res.status}: ${errorText}` };
+                }
+            }
+            return res.json();
+        } catch (error) {
+            console.error('POST request error:', error, "Action:", action);
+            return { success: false, message: 'Network error or invalid JSON response during POST', error: error.toString() };
+        }
     }
 
     async function fetchTests() {
@@ -99,8 +346,326 @@
     async function fetchStats(testName) {
       return getRequest({ action: 'stats', test_name: testName });
     }
+    
+    async function fetchTestConfig(testName) {
+        return getRequest({ action: 'loadConfig', test_name: testName });
+    }
 
-    // --- Card Creation and Logic ---
+    // --- Config Modal Logic ---
+    function openConfigModal() {
+        configModal.classList.remove('hidden');
+        setTimeout(() => configModalContentWrapper.classList.remove('modal-hidden'), 10);
+        setTimeout(() => configModalContentWrapper.classList.add('modal-visible'), 20);
+        showConfigListView();
+        loadAndDisplayConfigurableTests();
+    }
+
+    function closeConfigModal() {
+        configModalContentWrapper.classList.add('modal-hidden');
+        configModalContentWrapper.classList.remove('modal-visible');
+        setTimeout(() => configModal.classList.add('hidden'), 300);
+    }
+
+    function showConfigListView() {
+        configListView.classList.remove('hidden');
+        configFormView.classList.add('hidden');
+        configModalTitle.textContent = 'Gerenciar Configurações de Teste';
+        saveConfigBtn.classList.add('hidden');
+        cancelConfigFormBtn.classList.add('hidden');
+        formErrorMessage.classList.add('hidden');
+        formSuccessMessage.classList.add('hidden');
+    }
+
+    function showConfigFormView(isEditing = false, testData = null) {
+        configListView.classList.add('hidden');
+        configFormView.classList.remove('hidden');
+        configModalTitle.textContent = isEditing ? `Editar Teste: ${testData.testName}` : 'Criar Novo Teste';
+        saveConfigBtn.classList.remove('hidden');
+        cancelConfigFormBtn.classList.remove('hidden');
+        formErrorMessage.classList.add('hidden');
+        formSuccessMessage.classList.add('hidden');
+        
+        testConfigForm.reset();
+        document.getElementById('originalTestName').value = ''; 
+
+        if (isEditing && testData) {
+            document.getElementById('testName').value = testData.testName;
+            document.getElementById('originalTestName').value = testData.testName; 
+            document.getElementById('status').value = testData.status || 'active';
+            document.getElementById('startDate').value = testData.startDate ? new Date(testData.startDate).toISOString().split('T')[0] : '';
+            document.getElementById('endDate').value = testData.endDate ? new Date(testData.endDate).toISOString().split('T')[0] : '';
+            document.getElementById('variants').value = Array.isArray(testData.variants) ? testData.variants.join(',') : (testData.variants || '');
+            document.getElementById('goalType').value = testData.goalType || 'conversion';
+            document.getElementById('goalValue').value = testData.goalValue || '';
+            document.getElementById('notes').value = testData.notes || '';
+        } else {
+            document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('status').value = 'active';
+            document.getElementById('goalType').value = 'conversion';
+        }
+    }
+
+    async function loadAndDisplayConfigurableTests() {
+        configTestsList.innerHTML = '<p class="text-gray-500 text-center">Carregando lista de testes...</p>';
+        const response = await getRequest({ action: 'listTests' }); 
+        if (response.success && Array.isArray(response.tests)) {
+            if (response.tests.length === 0) {
+                configTestsList.innerHTML = '<p class="text-gray-500 text-center">Nenhum teste configurado encontrado.</p>';
+                return;
+            }
+            configTestsList.innerHTML = ''; 
+            response.tests.forEach(test => {
+                const testElement = document.createElement('div');
+                testElement.className = 'p-3 bg-gray-50 rounded-md shadow-sm flex justify-between items-center gap-2';
+                testElement.innerHTML = `
+                    <div class="flex-grow">
+                        <p class="font-semibold text-gray-700 truncate" title="${test.testName}">${test.testName}</p>
+                        <p class="text-xs text-gray-500">Status: ${test.status || 'N/A'}</p>
+                    </div>
+                    <div class="flex-shrink-0 flex gap-2">
+                        <button data-testname="${test.testName}" class="get-code-btn px-3 py-1 bg-teal-500 text-white text-xs font-medium rounded-md hover:bg-teal-600" title="Obter Snippet de Código">Código &lt;/&gt;</button>
+                        <button data-testname="${test.testName}" class="edit-test-btn px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600" title="Editar Teste">Editar</button>
+                    </div>
+                `;
+                configTestsList.appendChild(testElement);
+            });
+            
+            document.querySelectorAll('.edit-test-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const testName = e.target.dataset.testname;
+                    const configResponse = await fetchTestConfig(testName);
+                    if (configResponse.success && configResponse.data) {
+                        showConfigFormView(true, configResponse.data);
+                    } else {
+                        alert(`Erro ao carregar configuração para ${testName}: ${configResponse.message || 'Erro desconhecido'}`);
+                    }
+                });
+            });
+            document.querySelectorAll('.get-code-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const testName = e.target.dataset.testname;
+                    const configResponse = await fetchTestConfig(testName);
+                    if (configResponse.success && configResponse.data) {
+                        openCodeSnippetModal(configResponse.data);
+                    } else {
+                        alert(`Erro ao carregar dados do teste para gerar snippet: ${configResponse.message || 'Erro desconhecido'}`);
+                    }
+                });
+            });
+        } else {
+            configTestsList.innerHTML = `<p class="text-red-500 text-center">Erro ao carregar testes: ${response.message || 'Erro desconhecido'}</p>`;
+        }
+    }
+    
+    manageTestsBtn.addEventListener('click', openConfigModal);
+    closeConfigModalBtn.addEventListener('click', closeConfigModal);
+    createNewTestBtn.addEventListener('click', () => showConfigFormView(false));
+    cancelConfigFormBtn.addEventListener('click', showConfigListView);
+
+    testConfigForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        formErrorMessage.classList.add('hidden');
+        formSuccessMessage.classList.add('hidden');
+        saveConfigBtn.disabled = true;
+        saveConfigBtn.textContent = 'Salvando...';
+
+        const formData = new FormData(this);
+        const configData = {
+            testName: formData.get('testName').trim(),
+            status: formData.get('status'),
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate') || null, 
+            variants: formData.get('variants').split(',').map(v => v.trim()).filter(v => v), 
+            goalType: formData.get('goalType'),
+            goalValue: formData.get('goalValue'),
+            notes: formData.get('notes')
+        };
+        
+        if (!configData.testName) {
+            formErrorMessage.textContent = 'O nome do teste é obrigatório.';
+            formErrorMessage.classList.remove('hidden');
+            saveConfigBtn.disabled = false;
+            saveConfigBtn.textContent = 'Salvar Configuração';
+            return;
+        }
+        if (!configData.variants || configData.variants.length === 0) {
+            formErrorMessage.textContent = 'Pelo menos uma variante é obrigatória.';
+            formErrorMessage.classList.remove('hidden');
+            saveConfigBtn.disabled = false;
+            saveConfigBtn.textContent = 'Salvar Configuração';
+            return;
+        }
+        
+        const response = await postRequest('saveConfig', configData);
+
+        if (response.success) {
+            formSuccessMessage.textContent = response.message || 'Configuração salva com sucesso!';
+            formSuccessMessage.classList.remove('hidden');
+            setTimeout(() => {
+                showConfigListView();
+                loadAndDisplayConfigurableTests(); 
+                renderDashboard(); 
+            }, 1500);
+        } else {
+            formErrorMessage.textContent = `Erro ao salvar: ${response.message || 'Erro desconhecido. Verifique o console.'}`;
+            formErrorMessage.classList.remove('hidden');
+        }
+        saveConfigBtn.disabled = false;
+        saveConfigBtn.textContent = 'Salvar Configuração';
+    });
+
+    // --- Code Snippet Modal Logic ---
+    function generatePageViewSnippet(testName, variantName) {
+        const escapedTestName = String(testName || '').replace(/'/g, "\\'");
+        const escapedVariantName = String(variantName || '').replace(/'/g, "\\'");
+        return `
+// Teste A/B - Rastreamento Pageview
+// Teste: ${testName}
+// Variante: ${variantName}
+(function(){
+    var C = {
+        s: '${BASE_URL}',
+        t: '${escapedTestName}',
+        v: '${escapedVariantName}'
+    };
+    function gI(p){ return (p||'') + Math.random().toString(36).slice(2) + Date.now().toString(36) }
+    function gCk(n){ const V='; '+document.cookie; const P=V.split('; '+n+'='); if(P.length===2) return P.pop().split(';').shift() }
+    function sCk(n,v,d){ const D=new Date(); D.setTime(D.getTime()+(d*864e5)); document.cookie=n+'='+v+';expires='+D.toUTCString()+';path=/;SameSite=Lax' }
+    var vI=gCk('ab_vId_p'); if(!vI){vI=gI('v');sCk('ab_vId_p',vI,365)}
+    var sI=sessionStorage.getItem('ab_sId_p'); if(!sI){sI=gI('s');sessionStorage.setItem('ab_sId_p',sI)}
+    sCk('ab_var_'+C.t.replace(/\\W/g,'_'),C.v,30); 
+    var D_payload={action:'track',visitor_id:vI,session_id:sI,test_name:C.t,variant:C.v,type:'pageview',timestamp:new Date().toISOString(),page_url:window.location.href,referrer:document.referrer,user_agent:navigator.userAgent};
+    var X=new XMLHttpRequest(); X.open('POST',C.s,true); X.setRequestHeader('Content-Type','text/plain;charset=UTF-8');
+    X.onreadystatechange=function(){if(X.readyState===4){if(X.status===200){console.log('A/B Track Pageview:',C.t,C.v,'OK')}else{console.error('A/B Track Pageview Err:',X.status,X.responseText)}}};
+    X.send(JSON.stringify(D_payload));
+})();
+`;
+    }
+
+    function generateConversionSnippet(testName) {
+        const escapedTestName = String(testName || '').replace(/'/g, "\\'");
+        return `
+// Teste A/B - Rastreamento Conversion
+// Teste: ${testName}
+(function(){
+    var C = {
+        s: '${BASE_URL}',
+        t: '${escapedTestName}',
+        v: 'conversion' // Variant for conversion events as per example
+    };
+    function gI(p){ return (p||'') + Math.random().toString(36).slice(2) + Date.now().toString(36) }
+    function gCk(n){ const V='; '+document.cookie; const P=V.split('; '+n+'='); if(P.length===2) return P.pop().split(';').shift() }
+    function sCk(n,v,d){ const D=new Date(); D.setTime(D.getTime()+(d*864e5)); document.cookie=n+'='+v+';expires='+D.toUTCString()+';path=/;SameSite=Lax' }
+    var vI=gCk('ab_vId_p'); if(!vI){vI=gI('v');sCk('ab_vId_p',vI,365)}
+    var sI=sessionStorage.getItem('ab_sId_p'); if(!sI){sI=gI('s');sessionStorage.setItem('ab_sId_p',sI)}
+    var D_payload={action:'track',visitor_id:vI,session_id:sI,test_name:C.t,variant:C.v,type:'conversion',timestamp:new Date().toISOString(),page_url:window.location.href,referrer:document.referrer,user_agent:navigator.userAgent};
+    var X=new XMLHttpRequest(); X.open('POST',C.s,true); X.setRequestHeader('Content-Type','text/plain;charset=UTF-8');
+    X.onreadystatechange=function(){if(X.readyState===4){if(X.status===200){console.log('A/B Track Conversion:',C.t,C.v,'OK')}else{console.error('A/B Track Conversion Err:',X.status,X.responseText)}}};
+    X.send(JSON.stringify(D_payload));
+})();
+`;
+    }
+
+    function openCodeSnippetModal(testConfig) {
+        codeSnippetModalBody.innerHTML = ''; 
+        codeSnippetModalTitle.textContent = `Snippets para: ${testConfig.testName}`;
+
+        const variants = Array.isArray(testConfig.variants) ? testConfig.variants : String(testConfig.variants || '').split(',').map(v => v.trim()).filter(v => v);
+
+        if (variants.length > 0) {
+            const pageviewSectionTitle = document.createElement('h4');
+            pageviewSectionTitle.className = 'text-lg font-semibold text-gray-700 mb-2';
+            pageviewSectionTitle.textContent = 'Códigos de Pageview (um para cada página de variante):';
+            codeSnippetModalBody.appendChild(pageviewSectionTitle);
+
+            variants.forEach(variantName => {
+                const snippetBlock = document.createElement('div');
+                snippetBlock.className = 'code-snippet-block mb-4';
+                
+                const variantTitle = document.createElement('p');
+                variantTitle.className = 'text-md font-medium text-gray-600';
+                variantTitle.textContent = `Para Variante: ${variantName}`;
+                snippetBlock.appendChild(variantTitle);
+
+                const preElement = document.createElement('pre');
+                preElement.textContent = generatePageViewSnippet(testConfig.testName, variantName).trim();
+                snippetBlock.appendChild(preElement);
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'mt-2 px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600 copy-single-snippet-btn';
+                copyBtn.textContent = 'Copiar Código da Variante';
+                copyBtn.addEventListener('click', () => copyTextToClipboard(preElement.textContent, copyBtn));
+                snippetBlock.appendChild(copyBtn);
+
+                codeSnippetModalBody.appendChild(snippetBlock);
+            });
+        }
+
+        const conversionSectionTitle = document.createElement('h4');
+        conversionSectionTitle.className = 'text-lg font-semibold text-gray-700 mb-2 mt-6';
+        conversionSectionTitle.textContent = 'Código de Conversão (para página de "Obrigado"):';
+        codeSnippetModalBody.appendChild(conversionSectionTitle);
+        
+        const conversionSnippetBlock = document.createElement('div');
+        conversionSnippetBlock.className = 'code-snippet-block';
+
+        const preConversion = document.createElement('pre');
+        preConversion.textContent = generateConversionSnippet(testConfig.testName).trim();
+        conversionSnippetBlock.appendChild(preConversion);
+        
+        const copyConversionBtn = document.createElement('button');
+        copyConversionBtn.className = 'mt-2 px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-md hover:bg-green-600 copy-single-snippet-btn';
+        copyConversionBtn.textContent = 'Copiar Código de Conversão';
+        copyConversionBtn.addEventListener('click', () => copyTextToClipboard(preConversion.textContent, copyConversionBtn));
+        conversionSnippetBlock.appendChild(copyConversionBtn);
+        
+        codeSnippetModalBody.appendChild(conversionSnippetBlock);
+        
+        configModal.classList.add('hidden'); 
+        codeSnippetModal.classList.remove('hidden');
+        setTimeout(() => codeSnippetModalContentWrapper.classList.remove('modal-hidden'), 10);
+        setTimeout(() => codeSnippetModalContentWrapper.classList.add('modal-visible'), 20);
+    }
+    
+    function copyTextToClipboard(text, buttonElement) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            if (buttonElement) {
+                const originalText = buttonElement.textContent;
+                buttonElement.textContent = 'Copiado!';
+                setTimeout(() => { buttonElement.textContent = originalText; }, 2000);
+            }
+        } catch (err) {
+            console.error('Erro ao copiar código:', err);
+             if (buttonElement) {
+                const originalText = buttonElement.textContent;
+                buttonElement.textContent = 'Erro ao Copiar';
+                setTimeout(() => { buttonElement.textContent = originalText; }, 2000);
+            }
+        }
+        document.body.removeChild(textArea);
+    }
+
+
+    function closeCodeSnippetModal() {
+        codeSnippetModalContentWrapper.classList.add('modal-hidden');
+        codeSnippetModalContentWrapper.classList.remove('modal-visible');
+        setTimeout(() => {
+            codeSnippetModal.classList.add('hidden');
+        }, 300);
+    }
+
+    closeCodeSnippetModalBtn.addEventListener('click', closeCodeSnippetModal);
+    backToManageBtn.addEventListener('click', () => {
+        closeCodeSnippetModal();
+        openConfigModal(); 
+    });
+
+    // --- Card Creation and Logic (Main Dashboard) ---
     function getConfidenceColor(confidence) {
       if (confidence >= 95) return 'bg-green-500';
       if (confidence >= 80) return 'bg-yellow-500';
@@ -115,7 +680,6 @@
         return 'bg-blue-500 text-white';
     }
 
-    // Helper function to parse stats, used by createCard
     function extractAndParseStats(statsInput) {
         let parsedConfidence = 0;
         let winningVariant = null;
@@ -132,12 +696,10 @@
             if (statsInput.variants) {
                 variantsArray = Object.entries(statsInput.variants).map(([name, data]) => {
                     const rawRate = data?.conversionRate;
-                    let rate = 0; // Default to 0 for calculations if not parseable
+                    let rate = 0; 
                     if (typeof rawRate !== 'undefined' && rawRate !== null && String(rawRate).trim() !== "") {
                         rate = parseFloat(rawRate);
-                        if (isNaN(rate)) {
-                            rate = 0; // Fallback for this variant's rate if NaN
-                        }
+                        if (isNaN(rate)) rate = 0;
                     }
                     return { 
                         name, 
@@ -157,7 +719,6 @@
         }
         return { parsedConfidence, winningVariant, variantsArray, originalStats: statsInput };
     }
-
 
     function createCard(test, stats) {
       const card = document.createElement('div');
@@ -267,8 +828,7 @@
       }
       bodyHTML += '</div>';
 
-      // Footer is now empty as per request to remove buttons
-      let footerHTML = `<div class="p-4 bg-gray-50 border-t border-gray-200"></div>`;
+      let footerHTML = `<div class="p-4 bg-gray-50 border-t border-gray-200"></div>`; 
 
       card.innerHTML = headerHTML + bodyHTML + footerHTML;
       
@@ -277,8 +837,8 @@
       }
 
       setTimeout(() => {
-        const canvas = card.querySelector(`#${testId}`);
-        if (canvas && originalStats.success && variantsArray && variantsArray.length > 0) {
+        const canvasEl = card.querySelector(`#${testId}`); 
+        if (canvasEl && originalStats.success && variantsArray && variantsArray.length > 0) {
           const variantNames = variantsArray.map(v => v.name);
           const conversionRates = variantsArray.map(v => v.conversionRate);
           
@@ -295,7 +855,7 @@
             return 'rgba(59, 130, 246, 1)';
           });
 
-          chartInstances[testId] = new Chart(canvas.getContext('2d'), {
+          chartInstances[testId] = new Chart(canvasEl.getContext('2d'), {
             type: 'bar',
             data: {
               labels: variantNames,
@@ -338,12 +898,12 @@
               }
             }
           });
-        } else if (canvas) {
-            canvas.style.display = 'none';
+        } else if (canvasEl) {
+            canvasEl.style.display = 'none';
             const noChartDataMsg = document.createElement('p');
             noChartDataMsg.className = 'text-xs text-gray-400 text-center py-4';
             noChartDataMsg.textContent = 'Gráfico indisponível (sem dados de variantes ou estatísticas).';
-            if(canvas.parentNode) canvas.parentNode.insertBefore(noChartDataMsg, canvas.nextSibling);
+            if(canvasEl.parentNode) canvasEl.parentNode.insertBefore(noChartDataMsg, canvasEl.nextSibling);
         }
       }, 0);
 
@@ -369,7 +929,7 @@
             noTestsMessage.querySelector('p.text-gray-400').textContent = 'A API pode estar indisponível ou retornou um formato inesperado.';
         } else {
              noTestsMessage.querySelector('p.text-xl').textContent = 'Nenhum teste encontrado.';
-            noTestsMessage.querySelector('p.text-gray-400').textContent = 'Verifique se há testes cadastrados ou tente novamente mais tarde.';
+            noTestsMessage.querySelector('p.text-gray-400').textContent = 'Verifique se há testes cadastrados ou tente gerenciar seus testes.';
         }
         return;
       }
