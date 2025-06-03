@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Teste A/B Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-primary: 'Inter', sans-serif;
+            --font-monospace: 'Roboto Mono', monospace;
+
+            --color-primary-hue: 250; 
+            --color-primary-saturation: 60%;
+            --color-primary-lightness-dark: 30%; 
+            --color-primary-lightness-base: 55%; 
+            --color-primary-lightness-light: 96%;
+            
+            --color-accent-hue: 145; 
+            --color-accent-saturation: 65%;
+            --color-accent-lightness: 45%;
+
+            --color-neutral-0: #FFFFFF;
+            --color-neutral-100: #F9FAFB; 
+            --color-neutral-200: #F3F4F6; 
+            --color-neutral-300: #E5E7EB; 
+            --color-neutral-400: #D1D5DB;
+            --color-neutral-500: #9CA3AF; 
+            --color-neutral-600: #6B7280; 
+            --color-neutral-700: #4B5563; 
+            --color-neutral-900: #1F2937; 
+
+            --color-confidence-bar: hsl(var(--color-primary-hue), 70%, 60%);
+            --color-confidence-bar-bg: var(--color-neutral-200);
+            
+            --primary-dark: hsl(var(--color-primary-hue), var(--color-primary-saturation), var(--color-primary-lightness-dark));
+            --primary-base: hsl(var(--color-primary-hue), var(--color-primary-saturation), var(--color-primary-lightness-base));
+            --primary-light: hsl(var(--color-primary-hue), var(--color-primary-saturation), var(--color-primary-lightness-light));
+            --accent-base: hsl(var(--color-accent-hue), var(--color-accent-saturation), var(--color-accent-lightness));
+            --accent-light: hsl(var(--color-accent-hue), var(--color-accent-saturation), 95%);
+
+            --color-success-val: hsl(145, 63%, 42%);
+            --color-warning-val: hsl(35, 92%, 60%);
+            --color-error-val: hsl(0, 72%, 51%);
+            --color-info-val: hsl(200, 80%, 55%);
+
+
+            --border-radius-sm: 4px;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+            --spacing-unit: 8px;
+        }
+
+        /* General Styles & SVG Icon base style */
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: var(--font-primary); margin: 0; background-color: var(--color-neutral-100);
+            color: var(--color-neutral-900); line-height: 1.6; font-size: 15px; /* Base font size */
+            -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+        }
+        .app-shell { display: flex; min-height: 100vh; }
+        .icon {
+            display: inline-block; width: 1.1em; height: 1.1em; /* Slightly smaller base for icons */
+            vertical-align: -0.15em; margin-right: calc(var(--spacing-unit) * 0.75);
+            fill: currentColor;
+        }
+        
+        /* Sidebar */
+        #appSidebar {
+            width: 250px; background-color: var(--color-neutral-900); 
+            color: var(--color-neutral-300); padding: calc(var(--spacing-unit) * 2.5) 0;
+            display: flex; flex-direction: column; box-shadow: var(--shadow-md);
+            transition: width 0.2s ease-out;
+        }
+        #appSidebar .sidebar-header {
+            padding: 0 calc(var(--spacing-unit) * 2.5) calc(var(--spacing-unit) * 2.5);
+            text-align: center;
+        }
+        #appSidebar .sidebar-header .logo {
+            font-size: 1.5em; font-weight: 700; color: var(--color-neutral-0);
+            display: flex; align-items: center; justify-content: center;
+        }
+        #appSidebar .logo .icon { width: 1.3em; height: 1.3em; margin-right: var(--spacing-unit); color: var(--accent-base); }
+        #appSidebar nav ul { list-style: none; padding: 0; margin: 0; }
+        #appSidebar nav li button {
+            display: flex; align-items: center; width: 100%;
+            padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 2.5);
+            background: none; border: none; color: var(--color-neutral-300); text-align: left;
+            cursor: pointer; font-size: 0.9em; font-weight: 500;
+            transition: background-color 0.15s ease, color 0.15s ease;
+            border-left: 3px solid transparent;
+        }
+        #appSidebar nav li button:hover { background-color: rgba(255,255,255,0.05); color: var(--color-neutral-0); }
+        #appSidebar nav li button.active {
+            background-color: var(--primary-base); color: var(--color-neutral-0);
+            font-weight: 600; border-left-color: var(--accent-base);
+        }
+
+        /* Main Content Area */
+        #appContent { flex: 1; padding: calc(var(--spacing-unit) * 3); overflow-y: auto; }
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: calc(var(--spacing-unit) * 2.5);
+            padding-bottom: calc(var(--spacing-unit) * 1.5);
+            border-bottom: 1px solid var(--color-neutral-300);
+        }
+        .page-header h2 { margin: 0; font-size: 1.75em; font-weight: 700; color: var(--color-neutral-900); }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Filters Bar */
+        .filters-bar {
+            background-color: var(--color-neutral-0);
+            padding: calc(var(--spacing-unit)*1.5) calc(var(--spacing-unit)*2);
+            margin-bottom: calc(var(--spacing-unit)*2.5);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            display: flex; align-items: center; gap: calc(var(--spacing-unit)*2);
+            flex-wrap: wrap; font-size: 0.9em;
+        }
+        .filters-bar .filter-group { display: flex; align-items: center; gap: var(--spacing-unit); }
+        .filters-bar label { color: var(--color-neutral-600); font-weight: 500; }
+        .filters-bar select, .filters-bar input[type="checkbox"] {
+            padding: calc(var(--spacing-unit)*0.75) var(--spacing-unit);
+            border: 1px solid var(--color-neutral-300); border-radius: var(--border-radius-sm);
+            background-color: var(--color-neutral-0); font-size: 1em; /* inherit from parent */
+        }
+        .filters-bar input[type="checkbox"] { width: auto; margin-right: calc(var(--spacing-unit)*0.5); transform: scale(0.9); }
+
+        /* Test Card Design (Simplified for listTestsSection) */
+        .test-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
+            gap: calc(var(--spacing-unit) * 2.5);
+        }
+        .test-card {
+            background-color: var(--color-neutral-0); border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md); padding: calc(var(--spacing-unit) * 2.5);
+            display: flex; flex-direction: column; gap: calc(var(--spacing-unit) * 1.5);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .test-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+        .test-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .test-card-header h3 { margin: 0; font-size: 1.2em; font-weight: 600; color: var(--color-neutral-900); line-height: 1.3; }
+        .status-badge {
+            padding: calc(var(--spacing-unit)*0.4) calc(var(--spacing-unit)*1.25);
+            border-radius: 100px; font-size: 0.7em; font-weight: 600;
+            color: var(--color-neutral-0) !important; /* Ensure text is white/contrasting */
+            text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center;
+        }
+        .status-badge .icon { margin-right: calc(var(--spacing-unit)*0.5); width: 0.9em; height: 0.9em; }
+        .status-active { background-color: var(--accent-base); }
+        .status-paused { background-color: var(--color-warning-val); color: var(--color-neutral-900) !important; }
+        .status-completed { background-color: var(--color-neutral-500); }
+
+        .test-card-meta { font-size: 0.85em; color: var(--color-neutral-600); }
+        .test-card-actions { margin-top: auto; padding-top: calc(var(--spacing-unit)*1.5); border-top: 1px solid var(--color-neutral-200); display: flex; gap: var(--spacing-unit); flex-wrap: wrap; }
+        .test-card-actions .btn { flex-grow: 1; text-align: center; }
+
+        /* Confidence Bar (for details page, and potentially later for cards) */
+        .confidence-section { margin-top: var(--spacing-unit); }
+        .confidence-section .label { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.9em; color: var(--color-neutral-600); font-weight: 500; margin-bottom: var(--spacing-unit); }
+        .confidence-section .value { font-size: 1.8em; font-weight: 700; color: var(--primary-base); }
+        .confidence-bar-container { width: 100%; background-color: var(--color-confidence-bar-bg); border-radius: var(--border-radius-sm); height: 10px; overflow: hidden; position: relative; }
+        .confidence-bar-progress { height: 100%; background-color: var(--color-confidence-bar); border-radius: var(--border-radius-sm); width: 0%; transition: width 0.5s ease-out; }
+        .confidence-bar-markers { display: flex; justify-content: space-between; font-size: 0.7em; color: var(--color-neutral-500); padding: 0 2px; margin-top: calc(var(--spacing-unit)*0.5); }
+        .confidence-bar-markers span:nth-child(2) { margin-left: auto; padding-right: 27%;} 
+        .confidence-bar-markers span:nth-child(3) { padding-right: 3%;}
+
+        /* General Card, Form, Button, Table styles from Iteration 4 (with slight theme adjustments) */
+        .card {
+            background-color: var(--color-neutral-0); border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md); padding: calc(var(--spacing-unit) * 3);
+            margin-bottom: calc(var(--spacing-unit) * 3);
+        }
+        .card-header {
+            font-size: 1.25em; font-weight: 600; color: var(--color-neutral-900);
+            margin: calc(var(--spacing-unit) * -3) calc(var(--spacing-unit) * -3) calc(var(--spacing-unit) * 2);
+            padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 3);
+            border-bottom: 1px solid var(--color-neutral-200); display: flex; align-items: center;
+        }
+        .card-header .icon { color: var(--primary-base); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--spacing-unit) * 2.5); }
+        .form-group { margin-bottom: calc(var(--spacing-unit) * 2); }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { display: block; margin-bottom: calc(var(--spacing-unit) * 0.75); font-weight: 600; font-size: 0.9em; color: var(--color-neutral-700); }
+        .form-group input[type="text"], .form-group input[type="date"], .form-group select, .form-group textarea {
+            width: 100%; padding: calc(var(--spacing-unit) * 1.25) calc(var(--spacing-unit) * 1.5);
+            border: 1px solid var(--color-neutral-300); border-radius: var(--border-radius-md);
+            box-sizing: border-box; font-size: 0.95em; font-family: var(--font-primary);
+            background-color: var(--color-neutral-0); color: var(--color-neutral-700);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--primary-base);
+            box-shadow: 0 0 0 3px hsla(var(--color-primary-hue),var(--color-primary-saturation),var(--color-primary-lightness-base), 0.2);
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .btn {
+            padding: calc(var(--spacing-unit)*1.1) calc(var(--spacing-unit)*2.2); /* Slightly adjusted padding */
+            border: 1px solid transparent; border-radius: var(--border-radius-md);
+            cursor: pointer; font-size: 0.9em; font-weight: 600; line-height: 1.2;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+            text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn:active { transform: translateY(1px) scale(0.98); }
+        .btn-primary { background-color: var(--primary-base); color: var(--color-neutral-0); }
+        .btn-primary:hover { background-color: hsl(var(--color-primary-hue),var(--color-primary-saturation),calc(var(--color-primary-lightness-base) - 7%)); }
+        .btn-accent { background-color: var(--accent-base); color: var(--color-neutral-0); }
+        .btn-accent:hover { background-color: hsl(var(--color-accent-hue),var(--color-accent-saturation),calc(var(--color-accent-lightness) - 7%)); }
+        .btn-success { background-color: var(--color-success-val); color: var(--color-neutral-0); }
+        .btn-warning { background-color: var(--color-warning-val); color: var(--color-neutral-900); }
+        .btn-danger { background-color: var(--color-error-val); color: var(--color-neutral-0); }
+        .btn-info { background-color: var(--color-info-val); color: var(--color-neutral-0); }
+        .btn-outline-gray { background-color: transparent; color: var(--color-neutral-600); border-color: var(--color-neutral-300); }
+        .btn-outline-gray:hover { background-color: var(--color-neutral-200); border-color: var(--color-neutral-400); color: var(--color-neutral-900); }
+        .btn-sm { padding: calc(var(--spacing-unit)*0.75) calc(var(--spacing-unit)*1.5); font-size: 0.8em; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: calc(var(--spacing-unit) * 1.5); font-size: 0.9em; }
+        th, td { padding: calc(var(--spacing-unit) * 1.25) calc(var(--spacing-unit) * 1.75); text-align: left; vertical-align: middle; border-bottom: 1px solid var(--color-neutral-200); }
+        th { background-color: var(--color-neutral-100); font-weight: 600; color: var(--color-neutral-600); text-transform: uppercase; font-size: 0.75em; letter-spacing: 0.5px; }
+        th:first-child { border-top-left-radius: var(--border-radius-md); }
+        th:last-child { border-top-right-radius: var(--border-radius-md); }
+        tr:hover td { background-color: var(--primary-light); } /* Hover for table rows */
+        .winner-row td { background-color: var(--accent-light) !important; font-weight: 600; }
+        .winner-row td:first-child::before { content: '🏆 '; }
+
+        /* Loader, Empty State, Modal, Notification (from Iteration 4, themed) */
+        .loader-container { text-align: center; padding: calc(var(--spacing-unit)*5) 0; display: flex; justify-content:center; align-items:center;}
+        .loader { display: inline-block; width: 36px; height: 36px; border: 4px solid var(--color-neutral-300); border-top-color: var(--primary-base); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: calc(var(--spacing-unit)*4); background-color: var(--color-neutral-0); border: 1px dashed var(--color-neutral-300); border-radius: var(--border-radius-lg); margin-top: calc(var(--spacing-unit)*2); }
+        .empty-state .icon { width: 3.5em; height: 3.5em; color: var(--primary-base); margin-bottom: var(--spacing-unit); }
+        .empty-state h3 { font-size: 1.2em; color: var(--color-neutral-900); margin: var(--spacing-unit) 0; }
+        .empty-state p { color: var(--color-neutral-600); margin-bottom: calc(var(--spacing-unit)*2); font-size: 0.9em; }
+        .notification-area { position: fixed; top: calc(var(--spacing-unit)*2); right: calc(var(--spacing-unit)*2); width: 340px; z-index: 10000; }
+        .notification { padding: calc(var(--spacing-unit)*1.5); margin-bottom: var(--spacing-unit); border-radius: var(--border-radius-md); box-shadow: var(--shadow-lg); font-weight: 500; font-size: 0.9em; display: flex; align-items: center; opacity: 0; transform: translateX(15px); animation: notifyIn 0.3s ease-out forwards; }
+        @keyframes notifyIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes notifyOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(15px); } }
+        .notification .icon { margin-right: var(--spacing-unit); width: 1.3em; height: 1.3em; }
+        .notification.success { background-color: var(--accent-base); color: var(--color-neutral-0); }
+        .notification.error { background-color: var(--color-error-val); color: var(--color-neutral-0); }
+        .notification.info { background-color: var(--color-info-val); color: var(--color-neutral-0); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(31, 41, 55, 0.7); display: none; align-items: center; justify-content: center; z-index: 9999; opacity: 0; transition: opacity 0.25s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { background-color: var(--color-neutral-0); padding: calc(var(--spacing-unit)*3); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg); width: 90%; max-width: 500px; text-align: left; transform: scale(0.95) translateY(10px); transition: transform 0.25s ease, opacity 0.25s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-unit); }
+        .modal-header h3 { margin: 0; font-size: 1.3em; font-weight: 600; color: var(--color-neutral-900); }
+        .modal-close-btn { background: none; border: none; font-size: 1.6em; color: var(--color-neutral-500); cursor: pointer; padding: 0; line-height: 1;}
+        .modal-body p { margin: var(--spacing-unit) 0 calc(var(--spacing-unit)*2.5) 0; color: var(--color-neutral-600); font-size: 0.95em; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: var(--spacing-unit); margin-top: calc(var(--spacing-unit)*2.5); }
+        
+        /* Details Page Specifics (can be reused from Iteration 4) */
+        #testDetailsSection .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: calc(var(--spacing-unit) * 3); }
+        #testDetailsSection .details-grid .card { margin-bottom: 0; }
+        .config-details-list p { margin: calc(var(--spacing-unit)*0.5) 0; font-size: 0.95em; }
+        .config-details-list strong { font-weight: 600; color: var(--color-neutral-700); margin-right: var(--spacing-unit); }
+        .performance-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-unit) var(--spacing-unit)*2; }
+        .performance-summary-grid p { margin: calc(var(--spacing-unit)*0.5) 0; font-size: 0.95em; }
+        .performance-summary-grid strong { font-weight: 600; }
+        .recommendation-list { list-style: none; padding-left: 0; }
+        .recommendation-list li { display: flex; align-items: flex-start; margin-bottom: var(--spacing-unit); font-size: 0.95em; }
+        .recommendation-list .icon { color: var(--accent-base); flex-shrink: 0; margin-top: 0.1em; }
+        .recommendation-list li.warning .icon { color: var(--color-warning-val); }
+
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            #appSidebar { width: 70px; }
+            #appSidebar .sidebar-header .logo-text, #appSidebar nav li button .nav-text { display: none; }
+            #appSidebar .sidebar-header .logo .icon { margin-right: 0; }
+            #appSidebar nav li button { justify-content: center; }
+            #appSidebar nav li button .icon { margin-right: 0; font-size: 1.4em; }
+        }
+        @media (max-width: 768px) {
+            body { font-size: 14px; } /* Slightly smaller base for mobile */
+            .app-shell { flex-direction: column; }
+            #appSidebar {
+                width: 100%; height: auto; flex-direction: row; align-items: center;
+                padding: 0; box-shadow: var(--shadow-sm) translateY(-2px); /* Shadow on top for bottom nav */
+                position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+                background-color: var(--color-neutral-0); 
+            }
+            #appSidebar .sidebar-header { display: none; }
+            #appSidebar nav { width: 100%; }
+            #appSidebar nav ul { display: flex; justify-content: space-around; width: 100%; }
+            #appSidebar nav li { flex: 1; }
+            #appSidebar nav li button {
+                padding: var(--spacing-unit) 0; flex-direction: column;
+                align-items: center; justify-content: center;
+                border-left: none; border-top: 3px solid transparent; /* Top border for active state */
+                height: 60px; color: var(--color-neutral-500); 
+            }
+            #appSidebar nav li button .icon { margin-right: 0; margin-bottom: calc(var(--spacing-unit)*0.25); font-size: 1.2em; }
+            #appSidebar nav li button .nav-text { display: block; font-size: 0.7em; }
+            #appSidebar nav li button.active { color: var(--primary-base); border-top-color: var(--primary-base); background-color: transparent; }
+            #appSidebar nav li button:hover { background-color: var(--color-neutral-100); }
+
+            #appContent { padding: var(--spacing-unit) * 2; padding-bottom: 75px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: var(--spacing-unit); }
+            .page-header .actions { width:100%; }
+            .page-header .actions .btn { width: 100%; }
+            .filters-bar { flex-direction: column; align-items: stretch; }
+            .filters-bar .filter-group { width: 100%; justify-content: space-between; }
+            .filters-bar .filter-group:not(:last-child) { margin-bottom: var(--spacing-unit); }
+            .test-cards-grid { grid-template-columns: 1fr; }
+            #testDetailsSection .details-grid { grid-template-columns: 1fr; }
+            .performance-summary-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <svg width="0" height="0" style="display:none;">
+        <symbol viewBox="0 0 24 24" id="icon-dashboard"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-list"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-add"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-settings"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61.22l2 3.46c.13.22.07.49.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-chart"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-edit"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-play"><path d="M8 5v14l11-7z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-pause"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-stop"><path d="M6 6h12v12H6z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-info"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-check-circle"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-warning"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-x-circle"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-file-text"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></symbol>
+        <symbol viewBox="0 0 24 24" id="icon-box"><path d="M21 16.5c0 .83-.67 1.5-1.5 1.5h-15c-.83 0-1.5-.67-1.5-1.5v-10C3 5.67 3.67 5 4.5 5H8l2-2h4l2 2h3.5c.83 0 1.5.67 1.5 1.5v10zm-3-9.5H6v9h12v-9z"/></symbol>
+        <symbol viewBox="0 0 20 20" id="icon-code"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 01-1.898-.632l4-12a1 1 0 011.265-.633zM6.316 5.051a1 1 0 01.633 1.265l-2 6a1 1 0 01-1.898-.632l2-6a1 1 0 011.265-.633zm10.026 0a1 1 0 01.633 1.265l-2 6a1 1 0 11-1.898-.632l2-6a1 1 0 011.265-.633z" clip-rule="evenodd" /></symbol>
+        <symbol viewBox="0 0 20 20" id="icon-export-alt"><path d="M10.707 2.293a1 1 0 00-1.414 0l-4 4a1 1 0 001.414 1.414L9 5.414V13a1 1 0 102 0V5.414l2.293 2.293a1 1 0 001.414-1.414l-4-4z" /><path d="M4 13a1 1 0 011 1v2a1 1 0 001 1h8a1 1 0 001-1v-2a1 1 0 112 0v2a3 3 0 01-3 3H6a3 3 0 01-3-3v-2a1 1 0 011-1z" /></symbol>
+    </svg>
+
+    <div class="app-shell">
+        <aside id="appSidebar">
+            <div class="sidebar-header">
+                <div class="logo"><svg class="icon"><use xlink:href="#icon-chart"></use></svg> <span class="logo-text">AB Pro</span></div>
+            </div>
+            <nav>
+                <ul>
+                    <li><button data-section="listTestsSection" class="active"><svg class="icon"><use xlink:href="#icon-dashboard"></use></svg><span class="nav-text">Dashboard de Testes</span></button></li>
+                    <li><button data-section="createTestSection" id="navCreateTestBtn"><svg class="icon"><use xlink:href="#icon-add"></use></svg><span class="nav-text">Novo Teste</span></button></li>
+                    <li><button data-section="settingsSection"><svg class="icon"><use xlink:href="#icon-settings"></use></svg><span class="nav-text">Configurações</span></button></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main id="appContent">
+            <div id="notificationArea" class="notification-area"></div>
+
+            <section id="listTestsSection" class="section active">
+                <div class="page-header">
+                    <h2>Dashboard de Testes A/B</h2>
+                    <div class="actions">
+                         <button class="btn btn-primary" id="goCreateTestBtn">
+                            <svg class="icon"><use xlink:href="#icon-add"></use></svg>Novo Teste
+                        </button>
+                    </div>
+                </div>
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label for="filterStatus">Status:</label>
+                        <select id="filterStatus" name="filterStatus">
+                            <option value="all">Todos</option>
+                            <option value="active">Ativo</option>
+                            <option value="paused">Pausado</option>
+                            <option value="completed">Concluído</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterSortBy">Ordenar por:</label>
+                        <select id="filterSortBy" name="filterSortBy">
+                            <option value="name">Nome</option>
+                            <option value="startDate">Data de Início</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="margin-left: auto;">
+                        <input type="checkbox" id="filterAutoUpdate" name="filterAutoUpdate" style="transform: scale(1.1); margin-right: 6px;">
+                        <label for="filterAutoUpdate">Auto-atualizar</label>
+                    </div>
+                </div>
+
+                <div id="testsLoader" class="loader-container"><div class="loader"></div></div>
+                <div class="test-cards-grid" id="testCardsGrid" style="display:none;">
+                    </div>
+                <div id="noTestsMessage" class="empty-state" style="display:none;">
+                    <svg class="icon"><use xlink:href="#icon-box"></use></svg>
+                    <h3>Nenhum teste para exibir</h3>
+                    <p>Crie seu primeiro teste A/B para começar a otimizar!</p>
+                    <button class="btn btn-primary" id="emptyStateCreateTestBtn">
+                        <svg class="icon"><use xlink:href="#icon-add"></use></svg>Criar Teste
+                    </button>
+                </div>
+            </section>
+            
+            <section id="createTestSection" class="section">
+                 <div class="page-header"><h2 id="formTitle">Criar Novo Teste A/B</h2></div>
+                 <div class="card">
+                    <div class="card-header"><svg class="icon"><use xlink:href="#icon-edit"></use></svg>Configuração do Teste</div>
+                    <form id="testForm">
+                        <input type="hidden" id="editingTestName" value="">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="testName">Nome do Teste</label>
+                                <input type="text" id="testName" name="testName" required placeholder="Ex: Otimização da Homepage">
+                            </div>
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select id="status" name="status">
+                                    <option value="active">Ativo</option>
+                                    <option value="paused">Pausado</option>
+                                    <option value="completed">Concluído</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="startDate">Data de Início</label>
+                                <input type="date" id="startDate" name="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="endDate">Data de Fim (opcional)</label>
+                                <input type="date" id="endDate" name="endDate">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="variants">Variantes (separadas por vírgula)</label>
+                                <input type="text" id="variants" name="variants" placeholder="Ex: Controle, Variante A, Variante B" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="goalType">Tipo de Meta</label>
+                                <select id="goalType" name="goalType">
+                                    <option value="conversion">Conversão (Evento)</option>
+                                    <option value="pageview">Pageview (URL)</option>
+                                    <option value="value">Valor Monetário</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="goalValue">Identificador da Meta</label>
+                                <input type="text" id="goalValue" name="goalValue" placeholder="Ex: evento_compra, /pagina-obrigado">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="notes">Notas Adicionais</label>
+                                <textarea id="notes" name="notes" placeholder="Descreva o objetivo do teste, hipóteses, etc."></textarea>
+                            </div>
+                        </div>
+                        <div class="form-actions" style="text-align: right; margin-top: calc(var(--spacing-unit)*3);">
+                            <button type="button" class="btn btn-outline-gray" id="cancelFormBtn" style="margin-right:var(--spacing-unit);">Cancelar</button>
+                            <button type="submit" class="btn btn-accent" id="saveTestButton">
+                                <svg class="icon" id="saveBtnIcon"><use xlink:href="#icon-check-circle"></use></svg>
+                                <span id="saveBtnText">Salvar Teste</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="testDetailsSection" class="section">
+                <div class="page-header">
+                    <h2 id="detailsTestTitle">Detalhes do Teste</h2>
+                    <div class="actions action-buttons" id="detailsActionButtons"></div>
+                </div>
+                <div id="testDetailsLoader" class="loader-container"><div class="loader"></div></div>
+                <div id="testDetailsContent" style="display:none;">
+                    <div class="details-grid">
+                        <div class="card">
+                            <div class="card-header"><svg class="icon"><use xlink:href="#icon-settings"></use></svg>Configuração do Teste</div>
+                            <div id="testConfigDetails" class="config-details-list"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><svg class="icon"><use xlink:href="#icon-chart"></use></svg>Sumário de Performance</div>
+                            <div id="testPerformanceSummary" class="performance-summary-grid"></div>
+                        </div>
+                    </div>
+                    <div class="card"> <div class="card-header"><svg class="icon"><use xlink:href="#icon-list"></use></svg>Resultados das Variantes</div>
+                        <div class="table-wrapper">
+                            <table id="variantsTable">
+                                <thead><tr><th>Variante</th><th>Sessões</th><th>Conversões</th><th>Taxa Conv.</th><th>Melhoria</th><th>Confiança</th><th>Valor Total</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="confidence-section" id="detailsConfidenceSection" style="margin-top:calc(var(--spacing-unit)*3); padding-top:calc(var(--spacing-unit)*2); border-top: 1px solid var(--color-neutral-200);">
+                            </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><svg class="icon"><use xlink:href="#icon-info"></use></svg>Recomendações & Próximos Passos</div>
+                        <ul id="testRecommendations" class="recommendation-list"></ul>
+                    </div>
+                     <div class="card">
+                        <div class="card-header"><svg class="icon"><use xlink:href="#icon-export-alt"></use></svg>Exportar Dados</div>
+                        <div class="action-buttons" style="display:flex; gap: var(--spacing-unit);">
+                            <button class="btn btn-info btn-sm" id="exportJsonBtn"><svg class="icon"><use xlink:href="#icon-file-text"></use></svg>Exportar para JSON</button>
+                            <button class="btn btn-info btn-sm" id="exportCsvBtn"><svg class="icon"><use xlink:href="#icon-file-text"></use></svg>Exportar para CSV</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="settingsSection" class="section">
+                 <div class="page-header"><h2>Configurações do Sistema</h2></div>
+                 <div class="card">
+                    <div class="card-header"><svg class="icon"><use xlink:href="#icon-info"></use></svg>Informações da Planilha</div>
+                    <div id="sheetInfoLoader" class="loader-container"><div class="loader"></div></div>
+                    <div id="sheetInfoContent" class="config-details-list" style="font-size:0.9em; line-height:1.7;"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="appModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Confirmação</h3>
+                <button id="modalCloseBtn" class="modal-close-btn" aria-label="Fechar modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Você tem certeza?</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline-gray" id="modalCancelBtn">Cancelar</button>
+                <button class="btn btn-primary" id="modalConfirmBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ===== CONFIG =====
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyTC4kNFXVQFGff81ryXDLD4kgEZ8yrSuJfzDkm6D8EdiD4sItH7n4_eRMlEc-kdHA/exec';
+    // ==================
+
+    const ICONS = {
+        CHART: `<svg class="icon"><use xlink:href="#icon-chart"></use></svg>`,
+        LIST: `<svg class="icon"><use xlink:href="#icon-list"></use></svg>`,
+        ADD: `<svg class="icon"><use xlink:href="#icon-add"></use></svg>`,
+        SETTINGS: `<svg class="icon"><use xlink:href="#icon-settings"></use></svg>`,
+        EDIT: `<svg class="icon"><use xlink:href="#icon-edit"></use></svg>`,
+        INFO: `<svg class="icon"><use xlink:href="#icon-info"></use></svg>`,
+        EXPORT_ALT: `<svg class="icon"><use xlink:href="#icon-export-alt"></use></svg>`,
+        PLAY: `<svg class="icon"><use xlink:href="#icon-play"></use></svg>`,
+        PAUSE: `<svg class="icon"><use xlink:href="#icon-pause"></use></svg>`,
+        STOP: `<svg class="icon"><use xlink:href="#icon-stop"></use></svg>`,
+        CHECK_CIRCLE: `<svg class="icon"><use xlink:href="#icon-check-circle"></use></svg>`,
+        WARNING: `<svg class="icon"><use xlink:href="#icon-warning"></use></svg>`,
+        X_CIRCLE: `<svg class="icon"><use xlink:href="#icon-x-circle"></use></svg>`,
+        BOX: `<svg class="icon"><use xlink:href="#icon-box"></use></svg>`,
+        FILE_TEXT: `<svg class="icon"><use xlink:href="#icon-file-text"></use></svg>`,
+        DASHBOARD: `<svg class="icon"><use xlink:href="#icon-dashboard"></use></svg>`,
+        CODE: `<svg class="icon"><use xlink:href="#icon-code"></use></svg>`,
+    };
+
+    const appSidebarEl = document.getElementById('appSidebar'); // Renamed to avoid conflict with global 'appSidebar'
+    const mainContentEl = document.getElementById('appContent'); // Renamed
+    const sectionsMap = { // Renamed
+        listTestsSection: document.getElementById('listTestsSection'),
+        createTestSection: document.getElementById('createTestSection'),
+        testDetailsSection: document.getElementById('testDetailsSection'),
+        settingsSection: document.getElementById('settingsSection'),
+    };
+    const notificationAreaEl = document.getElementById('notificationArea'); // Renamed
+    const testFormEl = document.getElementById('testForm'); // Renamed
+    const appModalEl = document.getElementById('appModal'); // Renamed
+    const modalCloseBtnEl = document.getElementById('modalCloseBtn'); // Renamed
+    
+    const testsLoaderEl = document.getElementById('testsLoader'); // For list
+    const testCardsGridEl = document.getElementById('testCardsGrid'); // For list
+    const noTestsMessageEl = document.getElementById('noTestsMessage'); // For list
+
+    let currentOpenTestNameJs = null; // Renamed
+    let activeSectionIdJs = 'listTestsSection'; // Renamed
+    let modalConfirmCallbackJs = null; // Renamed
+
+    function showSection(sectionId) {
+        console.log(`Attempting to show section: ${sectionId}`);
+        activeSectionIdJs = sectionId;
+        for (const sId in sectionsMap) {
+            if (sectionsMap[sId]) {
+                sectionsMap[sId].classList.remove('active');
+            } else {
+                console.warn(`Section element for key ${sId} (ID: ${sectionsMap[sId] ? sectionsMap[sId].id : 'undefined'}) not found.`);
+            }
+        }
+        appSidebarEl.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+
+        if (sectionsMap[sectionId]) {
+            sectionsMap[sectionId].classList.add('active');
+            const navButton = appSidebarEl.querySelector(`button[data-section="${sectionId}"]`);
+            if (navButton) navButton.classList.add('active');
+            if(mainContentEl) mainContentEl.scrollTop = 0;
+            console.log(`Section ${sectionId} activated.`);
+
+            if (sectionId === 'listTestsSection') fetchAndRenderActiveTests();
+            if (sectionId === 'settingsSection') loadSheetInfo();
+        } else {
+            console.error(`Cannot show section: Element for key ${sectionId} not found.`);
+        }
+    }
+
+    function resetAndSetupFormForCreate() {
+        console.log("Resetting form for new test.");
+        if (!testFormEl) { console.error("Test form not found for reset!"); return; }
+        testFormEl.reset();
+        document.getElementById('editingTestName').value = '';
+        document.getElementById('formTitle').textContent = 'Criar Novo Teste A/B';
+        document.getElementById('testName').readOnly = false;
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').value = today;
+        document.getElementById('saveBtnText').textContent = 'Criar Teste';
+    }
+
+    function showNotification(message, type = 'info', duration = 4000) {
+        console.log(`Notification (${type}): ${message}`);
+        if (!notificationAreaEl) { console.error("Notification area not found!"); return; }
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = `notification ${type}`;
+        let iconHtml = '';
+        if (type === 'success') iconHtml = ICONS.CHECK_CIRCLE;
+        else if (type === 'error') iconHtml = ICONS.X_CIRCLE;
+        else if (type === 'info') iconHtml = ICONS.INFO;
+        else if (type === 'warning') iconHtml = ICONS.WARNING;
+        
+        notificationDiv.innerHTML = `${iconHtml}<span>${message}</span>`;
+        notificationAreaEl.appendChild(notificationDiv);
+        setTimeout(() => {
+            notificationDiv.style.animation = 'notifyOut 0.3s ease-in forwards';
+            setTimeout(() => notificationDiv.remove(), 300);
+        }, duration);
+    }
+
+    function showModal(title, message, onConfirmCallback, confirmText = 'Confirmar', cancelText = 'Cancelar', confirmBtnClass = 'btn-primary') {
+        console.log(`Showing modal: ${title}`);
+        if (!appModalEl) { console.error("Modal element not found!"); return; }
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalMessage').innerHTML = message;
+        const confirmBtn = document.getElementById('modalConfirmBtn');
+        confirmBtn.textContent = confirmText;
+        confirmBtn.className = `btn ${confirmBtnClass}`;
+        document.getElementById('modalCancelBtn').textContent = cancelText;
+        modalConfirmCallbackJs = onConfirmCallback;
+        appModalEl.classList.add('active');
+    }
+    function hideModal() {
+        console.log("Hiding modal.");
+        if (!appModalEl) { console.error("Modal element not found for hiding!"); return; }
+        appModalEl.classList.remove('active');
+        modalConfirmCallbackJs = null;
+    }
+
+    async function makeApiCall(action, params = {}, method = 'GET', body = null) {
+        console.log(`API Call Start: ${action}`, { params, method }); // Log body separately if sensitive
+        let url = `${SCRIPT_URL}?action=${action}`;
+        if (method === 'GET' && Object.keys(params).length > 0) {
+            url += '&' + new URLSearchParams(params).toString();
+        }
+
+        try {
+            const options = { method, mode: 'cors' };
+            if (method === 'POST' && body) {
+                options.body = JSON.stringify(body); 
+                options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
+            }
+            const response = await fetch(url, options);
+            console.log(`API Response Status (${action}): ${response.status}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`API Error Text (${action}): `, errorText.substring(0, 500)); // Limit error text length
+                let errorMessage = `Erro HTTP: ${response.status}`;
+                try { const errorJson = JSON.parse(errorText); errorMessage = errorJson.error || errorJson.message || errorMessage; }
+                catch (e) { /* Ignore if errorText is not JSON */ }
+                throw new Error(errorMessage);
+            }
+            const result = await response.json();
+            console.log(`API Success Data (${action}):`, result);
+            if (result.success === false && action !== 'exportData') {
+                throw new Error(result.error || result.message || 'API retornou erro (success:false).');
+            }
+            return result;
+        } catch (error) {
+            console.error(`API Call Critical Error (${action}):`, error);
+            showNotification(`Erro na API (${action}): ${error.message}`, 'error');
+            throw error;
+        }
+    }
+    
+    async function fetchAndRenderActiveTests() {
+        console.log("Fetching active tests...");
+        if (!testsLoaderEl || !testCardsGridEl || !noTestsMessageEl) {
+            console.error("DOM elements for test list/cards not found!"); return;
+        }
+        testsLoaderEl.style.display = 'flex';
+        testCardsGridEl.style.display = 'none';
+        testCardsGridEl.innerHTML = '';
+        noTestsMessageEl.style.display = 'none';
+
+        try {
+            const result = await makeApiCall('listTests');
+            if (result.tests && result.tests.length > 0) {
+                console.log(`Found ${result.tests.length} tests.`);
+                result.tests.forEach(test => {
+                    testCardsGridEl.appendChild(createSimplifiedTestCardElement(test));
+                });
+                testCardsGridEl.style.display = 'grid';
+            } else {
+                console.log("No tests found.");
+                noTestsMessageEl.style.display = 'block';
+            }
+        } catch (error) {
+            console.error("Error in fetchAndRenderActiveTests:", error);
+            noTestsMessageEl.innerHTML = `<svg class="icon"><use xlink:href="#icon-warning"></use></svg><h3>Falha ao carregar testes</h3><p>${error.message}</p>`;
+            noTestsMessageEl.style.display = 'block';
+        } finally {
+            testsLoaderEl.style.display = 'none';
+            console.log("Finished fetching active tests.");
+        }
+    }
+
+    function createSimplifiedTestCardElement(test) {
+        const card = document.createElement('div');
+        card.className = 'test-card';
+        card.dataset.testName = test.testName;
+        let statusIconSvg = ICONS.INFO;
+        if(test.status === 'active') statusIconSvg = ICONS.PLAY;
+        if(test.status === 'paused') statusIconSvg = ICONS.PAUSE;
+        if(test.status === 'completed') statusIconSvg = ICONS.STOP;
+
+        card.innerHTML = `
+            <div class="test-card-header">
+                <h3>${test.testName}</h3>
+                <span class="status-badge status-${test.status}">${statusIconSvg} ${test.status}</span>
+            </div>
+            <div class="test-card-meta">
+                Variantes: ${Array.isArray(test.variants) ? test.variants.join(', ') : 'N/A'} <br>
+                ${test.startDate ? 'Início: ' + new Date(test.startDate).toLocaleDateString() : 'N/A'}
+            </div>
+            <div class="test-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="loadAndShowTestDetails('${test.testName}')">
+                    ${ICONS.CHART} Ver Análise
+                </button>
+                <button class="btn btn-outline-gray btn-sm" onclick="loadTestForEditing('${test.testName}')">
+                    ${ICONS.EDIT} Editar
+                </button>
+            </div>
+        `;
+        return card;
+    }
+
+    if (testFormEl) {
+        testFormEl.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            console.log("Test form submitted.");
+            const saveButton = document.getElementById('saveTestButton');
+            const saveBtnText = document.getElementById('saveBtnText');
+            if (!saveButton || !saveBtnText) { console.error("Save button or text element not found"); return; }
+            const originalBtnText = saveBtnText.textContent;
+            saveButton.disabled = true;
+            saveBtnText.textContent = 'Salvando...';
+
+            const config = {
+                testName: document.getElementById('testName').value,
+                status: document.getElementById('status').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                variants: document.getElementById('variants').value.split(',').map(v => v.trim()).filter(v => v),
+                goalType: document.getElementById('goalType').value,
+                goalValue: document.getElementById('goalValue').value,
+                notes: document.getElementById('notes').value
+            };
+            
+            try {
+                const result = await makeApiCall('saveConfig', {}, 'POST', { action: 'saveConfig', ...config });
+                showNotification(result.message || 'Configuração salva com sucesso!', 'success');
+                resetAndSetupFormForCreate();
+                showSection('listTestsSection');
+            } catch (error) { console.error("Error saving test configuration:", error); }
+            finally { saveButton.disabled = false; saveBtnText.textContent = originalBtnText; }
+        });
+    } else { console.error("Test Form #testForm not found!"); }
+
+
+    async function loadTestForEditing(testName) {
+        console.log(`Loading test for editing: ${testName}`);
+        showNotification(`Carregando ${testName}...`, 'info', 1500);
+        try {
+            const result = await makeApiCall('loadConfig', { test_name: testName });
+            const config = result.data;
+            document.getElementById('formTitle').textContent = `Editando Teste: ${config.testName}`;
+            document.getElementById('editingTestName').value = config.testName;
+            document.getElementById('testName').value = config.testName;
+            document.getElementById('testName').readOnly = true;
+            document.getElementById('status').value = config.status;
+            document.getElementById('startDate').value = config.startDate ? new Date(config.startDate).toISOString().split('T')[0] : '';
+            document.getElementById('endDate').value = config.endDate ? new Date(config.endDate).toISOString().split('T')[0] : '';
+            document.getElementById('variants').value = Array.isArray(config.variants) ? config.variants.join(',') : '';
+            document.getElementById('goalType').value = config.goalType;
+            document.getElementById('goalValue').value = config.goalValue;
+            document.getElementById('notes').value = config.notes;
+            document.getElementById('saveBtnText').textContent = 'Salvar Alterações';
+            showSection('createTestSection');
+        } catch (error) { console.error(`Error loading test ${testName} for editing:`, error); }
+    }
+    
+    async function loadAndShowTestDetails(testName) {
+        console.log(`Loading details for test: ${testName}`);
+        currentOpenTestNameJs = testName;
+        showSection('testDetailsSection');
+        
+        const contentDiv = document.getElementById('testDetailsContent');
+        const loader = document.getElementById('testDetailsLoader');
+        if (!contentDiv || !loader) { console.error("DOM elements for test details not found!"); return; }
+        contentDiv.style.display = 'none';
+        loader.style.display = 'flex';
+
+        try {
+            const result = await makeApiCall('calculateSignificance', { test_name: testName });
+            document.getElementById('detailsTestTitle').textContent = `${result.testName}`;
+            const configResult = await makeApiCall('loadConfig', { test_name: testName });
+
+            if (configResult.success && configResult.data) {
+                const config = configResult.data;
+                const configDetailsDiv = document.getElementById('testConfigDetails');
+                if(configDetailsDiv) configDetailsDiv.innerHTML = `
+                    <p><strong>Status:</strong> <span class="status-badge status-${config.status}">${config.status}</span></p>
+                    <p><strong>Data de Início:</strong> ${config.startDate ? new Date(config.startDate).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>Data de Fim:</strong> ${config.endDate ? new Date(config.endDate).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>Variantes:</strong> ${config.variants.join(', ')}</p>
+                    <p><strong>Tipo de Meta:</strong> ${config.goalType}</p>
+                    <p><strong>ID da Meta:</strong> ${config.goalValue || 'N/A'}</p>
+                    <p><strong>Notas:</strong> ${config.notes ? config.notes.replace(/\n/g, '<br>') : '<em>Nenhuma</em>'}</p>
+                `;
+                setupDetailsActionButtons(testName, config.status);
+            }
+
+            const performanceSummaryDiv = document.getElementById('testPerformanceSummary');
+            if(performanceSummaryDiv) performanceSummaryDiv.innerHTML = `
+                <p><strong>${ICONS.INFO} Total de Sessões:</strong> ${result.totalVisitors || 'N/A'}</p>
+                <p><strong>${ICONS.CHECK_CIRCLE} Total de Conversões:</strong> ${result.totalConversions || 'N/A'}</p>
+                <p><strong>Taxa de Conversão Geral:</strong> ${result.overallRate || '0.00'}%</p>
+                <p><strong>Duração Atual:</strong> ${result.analysis?.duration || 'N/A'}</p>
+                <p><strong>Amostra Atual:</strong> ${result.analysis?.sampleSize?.current || 'N/A'}</p>
+                <p><strong>Amostra Recomendada:</strong> ${result.analysis?.sampleSize?.recommended || 'N/A'}</p>
+            `;
+
+            const variantsTableBody = document.getElementById('variantsTable')?.getElementsByTagName('tbody')[0];
+            if(variantsTableBody) {
+                variantsTableBody.innerHTML = '';
+                if (result.variants) {
+                    Object.entries(result.variants).forEach(([variantName, data]) => {
+                        const row = variantsTableBody.insertRow();
+                        row.insertCell().textContent = variantName;
+                        row.insertCell().textContent = data.sessions || data.visitors || 0;
+                        row.insertCell().textContent = data.conversions || 0;
+                        row.insertCell().textContent = data.conversionRate + '%';
+                        let improvement = 'N/A', confidence = 'N/A';
+                        const controlName = Object.keys(result.variants)[0];
+                        if (result.significance) {
+                            if (variantName !== controlName) improvement = result.significance.improvement || '0.00';
+                            confidence = result.significance.confidence || '0.00';
+                            if(result.significance.winner === variantName) confidence = result.significance.confidence;
+                            else if (variantName === controlName && result.significance.winner) confidence = 'N/A (Controle)';
+                        }
+                        row.insertCell().textContent = improvement + '%';
+                        row.insertCell().textContent = confidence + '%';
+                        row.insertCell().textContent = `R$ ${parseFloat(data.totalValue || 0).toFixed(2)}`;
+                        if (result.significance && result.significance.winner === variantName) row.classList.add('winner-row');
+                    });
+                }
+            }
+            
+            const detailsConfidenceValue = parseFloat(result.significance?.confidence || 0);
+            const detailsConfidenceSection = document.getElementById('detailsConfidenceSection');
+            if (detailsConfidenceSection) {
+                 detailsConfidenceSection.innerHTML = `
+                    <h4>Análise de Significância Principal</h4>
+                    <div class="label" style="margin-top:var(--spacing-unit);">
+                        <span>Confiança</span>
+                        <span class="value">${detailsConfidenceValue.toFixed(1)}%</span>
+                    </div>
+                    <div class="confidence-bar-container">
+                        <div class="confidence-bar-progress" style="width: ${detailsConfidenceValue}%;"></div>
+                    </div>
+                    <div class="confidence-bar-markers">
+                        <span>0%</span><span>90%</span><span>95%</span><span>99%</span>
+                    </div>
+                    <p style="font-size:0.9em; margin-top:var(--spacing-unit)"><strong>Resultado Significativo?</strong> ${result.significance?.significant ? '<span style="color:var(--color-success-val); font-weight:bold;">Sim</span>' : '<span style="color:var(--color-warning-val); font-weight:bold;">Não</span>'}</p>
+                    <p style="font-size:0.9em;"><strong>Variante Vencedora:</strong> ${result.significance?.winner ? `<strong style="color:var(--color-success-val);">${result.significance.winner}</strong>` : '<em>Nenhuma conclusiva</em>'}</p>
+                    <p style="font-style:italic; color: var(--color-neutral-600); margin-top: var(--spacing-unit); font-size:0.85em;">${result.significance?.message || ''}</p>
+                `;
+            }
+
+            const recommendationsUl = document.getElementById('testRecommendations');
+            if(recommendationsUl) {
+                recommendationsUl.innerHTML = '';
+                if (result.analysis?.recommendations && result.analysis.recommendations.length > 0) {
+                    result.analysis.recommendations.forEach(rec => {
+                        const li = document.createElement('li');
+                        const icon = rec.startsWith('⚠️') ? ICONS.WARNING : ICONS.CHECK_CIRCLE;
+                        if(rec.startsWith('⚠️')) li.classList.add('warning');
+                        li.innerHTML = `${icon} ${rec.replace('⚠️','').replace('✅','').trim()}`;
+                        recommendationsUl.appendChild(li);
+                    });
+                } else {
+                    recommendationsUl.innerHTML = `<li>${ICONS.INFO} Nenhuma recomendação específica gerada.</li>`;
+                }
+            }
+            if(contentDiv) contentDiv.style.display = 'block';
+        } catch (error) {
+            console.error(`Error loading details for test ${testName}:`, error);
+            document.getElementById('detailsTestTitle').textContent = `Erro ao Carregar Detalhes`;
+            if(contentDiv) contentDiv.innerHTML = `<div class="empty-state"><h3>${ICONS.WARNING} Erro ao carregar detalhes</h3><p>${error.message}</p></div>`;
+            if(contentDiv) contentDiv.style.display = 'block';
+        } finally {
+            if(loader) loader.style.display = 'none';
+        }
+    }
+
+    function setupDetailsActionButtons(testName, currentStatus) {
+        const container = document.getElementById('detailsActionButtons');
+        if (!container) return;
+        container.innerHTML = ''; 
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-outline-primary btn-sm';
+        editBtn.innerHTML = `${ICONS.EDIT}Editar Config.`;
+        editBtn.onclick = () => loadTestForEditing(testName);
+        container.appendChild(editBtn);
+        if (currentStatus === 'active') {
+            const pauseBtn = document.createElement('button');
+            pauseBtn.className = 'btn btn-warning btn-sm';
+            pauseBtn.innerHTML = `${ICONS.PAUSE}Pausar Teste`;
+            pauseBtn.onclick = () => confirmChangeStatus(testName, 'paused', 'Pausar Teste', 'Tem certeza que deseja pausar este teste?');
+            container.appendChild(pauseBtn);
+        } else if (currentStatus === 'paused') {
+            const resumeBtn = document.createElement('button');
+            resumeBtn.className = 'btn btn-success btn-sm';
+            resumeBtn.innerHTML = `${ICONS.PLAY}Reativar Teste`;
+            resumeBtn.onclick = () => confirmChangeStatus(testName, 'active', 'Reativar Teste', 'Tem certeza que deseja reativar este teste?');
+            container.appendChild(resumeBtn);
+        }
+        if (currentStatus !== 'completed') {
+            const completeBtn = document.createElement('button');
+            completeBtn.className = 'btn btn-outline-gray btn-sm'; 
+            completeBtn.innerHTML = `${ICONS.STOP}Marcar Concluído`;
+            completeBtn.onclick = () => confirmChangeStatus(testName, 'completed', 'Concluir Teste','Tem certeza que deseja marcar este teste como concluído?');
+            container.appendChild(completeBtn);
+        }
+    }
+
+    async function confirmChangeStatus(testName, newStatus, modalTitle, modalMsg) {
+        showModal( modalTitle, modalMsg, async () => {
+                console.log(`Attempting to change status of ${testName} to ${newStatus}`);
+                try {
+                    const configResult = await makeApiCall('loadConfig', { test_name: testName });
+                    if (!configResult.success || !configResult.data) throw new Error("Não foi possível carregar config atual.");
+                    const currentConfig = configResult.data;
+                    currentConfig.status = newStatus;
+                    await makeApiCall('saveConfig', {}, 'POST', { action: 'saveConfig', ...currentConfig });
+                    showNotification(`Status de "${testName}" alterado para "${newStatus}".`, 'success');
+                    if(activeSectionIdJs === 'testDetailsSection' && currentOpenTestNameJs === testName) loadAndShowTestDetails(testName);
+                    if(activeSectionIdJs === 'listTestsSection') fetchAndRenderActiveTests();
+                } catch (error) { console.error(`Error changing status for ${testName}:`, error); }
+            },
+            newStatus === 'completed' ? 'Sim, Concluir' : 'Sim, Alterar', 'Cancelar',
+            newStatus === 'completed' ? 'btn-danger' : (newStatus === 'active' ? 'btn-success' : 'btn-primary')
+        );
+    }
+
+    async function exportTestData(testName, format) {
+        console.log(`Exporting data for ${testName} as ${format}`);
+        showNotification(`Exportando ${format.toUpperCase()}...`, 'info');
+        try {
+            const url = `${SCRIPT_URL}?action=exportData&test_name=${encodeURIComponent(testName)}&format=${format}`;
+            const response = await fetch(url);
+            if (!response.ok) { const errorText = await response.text(); throw new Error(`Exportação falhou (HTTP ${response.status}): ${errorText.substring(0,100)}`); }
+            const filenameSuggestion = `${testName}_export.${format}`;
+            let dataToDownload, mimeType;
+            if (format === 'json') {
+                const result = await response.json();
+                if(result.data === undefined && !result.success) throw new Error(result.error || "Resposta JSON inválida.");
+                dataToDownload = JSON.stringify(result.data || result, null, 2); // Handle if backend returns data directly or in .data
+                mimeType = result.mimeType || 'application/json';
+            } else { dataToDownload = await response.text(); mimeType = 'text/csv;charset=utf-8'; }
+            const blob = new Blob([dataToDownload], { type: mimeType });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filenameSuggestion;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            showNotification(`Dados exportados: ${link.download}`, 'success');
+        } catch (error) { console.error('Erro ao exportar:', error); showNotification(`Erro ao exportar: ${error.message}`, 'error'); }
+    }
+
+    async function loadSheetInfo() {
+        console.log("Loading sheet info...");
+        const contentDiv = document.getElementById('sheetInfoContent');
+        const loader = document.getElementById('sheetInfoLoader');
+        if(!contentDiv || !loader) return;
+        loader.style.display = 'flex'; contentDiv.innerHTML = '';
+        try {
+            const result = await makeApiCall('sheetInfo');
+            contentDiv.innerHTML = `
+                <p><strong>ID da Planilha:</strong> <code style="font-family:var(--font-monospace); background: var(--color-neutral-200); padding: 2px 4px; border-radius:var(--border-radius-sm);">${result.id}</code></p>
+                <p><strong>Nome:</strong> ${result.name}</p>
+                <p><strong>URL:</strong> <a href="${result.url}" target="_blank" rel="noopener noreferrer">${result.url}</a></p>
+                <p><strong>Total de Linhas (geral):</strong> ${result.totalRows}</p>
+                <h4 style="margin-top:var(--spacing-unit)*2; margin-bottom:var(--spacing-unit);">Abas:</h4>
+                <ul style="list-style:none; padding-left:0;">
+                    ${Object.entries(result.sheets).map(([name, info]) => `<li style="margin-bottom:calc(var(--spacing-unit)*0.5); font-size:0.9em;"><strong>${name}:</strong> ${info.rows} linhas, ${info.columns} colunas</li>`).join('')}
+                </ul>`;
+        } catch (error) { contentDiv.innerHTML = `<div class="empty-state"><h3>${ICONS.WARNING} Erro ao carregar info</h3><p>${error.message}</p></div>`; }
+        finally { loader.style.display = 'none'; }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM fully loaded. Initializing A/B Test Dashboard.");
+        // Attach event listeners to dynamically added/queried elements
+        appSidebarEl.querySelectorAll('button[data-section]').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetSection = button.dataset.section;
+                showSection(targetSection); // Use non-JS suffixed function now
+                if (targetSection === 'createTestSection' && button.id === 'navCreateTestBtn') {
+                    resetAndSetupFormForCreate();
+                }
+            });
+        });
+        const goCreateBtn = document.getElementById('goCreateTestBtn');
+        if(goCreateBtn) goCreateBtn.addEventListener('click', () => { resetAndSetupFormForCreate(); showSection('createTestSection'); });
+        const emptyCreateBtn = document.getElementById('emptyStateCreateTestBtn');
+        if(emptyCreateBtn) emptyCreateBtn.addEventListener('click', () => { resetAndSetupFormForCreate(); showSection('createTestSection'); });
+        const cancelForm = document.getElementById('cancelFormBtn');
+        if(cancelForm) cancelForm.addEventListener('click', () => {
+            if (document.getElementById('editingTestName').value && currentOpenTestNameJs) {
+                showSection('testDetailsSection'); loadAndShowTestDetails(currentOpenTestNameJs); 
+            } else { showSection('listTestsSection'); }
+        });
+        if(modalCloseBtnEl) modalCloseBtnEl.addEventListener('click', hideModal);
+        const modalConfirm = document.getElementById('modalConfirmBtn');
+        if(modalConfirm) modalConfirm.addEventListener('click', () => { if(modalConfirmCallbackJs) modalConfirmCallbackJs(); hideModal(); });
+        const modalCancel = document.getElementById('modalCancelBtn');
+        if(modalCancel) modalCancel.addEventListener('click', hideModal);
+        if(appModalEl) appModalEl.addEventListener('click', (event) => { if (event.target === appModalEl) hideModal(); });
+        const exportJson = document.getElementById('exportJsonBtn');
+        if(exportJson) exportJson.addEventListener('click', () => { if(currentOpenTestNameJs) exportTestData(currentOpenTestNameJs, 'json'); });
+        const exportCsv = document.getElementById('exportCsvBtn');
+        if(exportCsv) exportCsv.addEventListener('click', () => { if(currentOpenTestNameJs) exportTestData(currentOpenTestNameJs, 'csv'); });
+        
+        showSection('listTestsSection'); // Start on the test list/dashboard
+    });
+    console.log("Main script execution block finished.");
+    </script>
+</body>
+</html>
