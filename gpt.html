@@ -159,6 +159,38 @@
       font-size: 0.9rem;
       margin: 0;
     }
+    .btn {
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+    }
+    .sample-size {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .sample-size h2 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+    .sample-size .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .sample-size label {
+      font-size: 0.9rem;
+    }
+    .sample-size input {
+      width: 80px;
+      padding: 4px;
+    }
     @media (max-width: 600px) {
       h1 { font-size: 2rem; }
       .filters { flex-direction: column; align-items: flex-start; }
@@ -184,6 +216,21 @@
         <label for="auto-update">Auto-atualizar</label>
       </div>
     </div>
+    <div class="sample-size">
+      <h2>Calculadora de Amostra</h2>
+      <div class="row">
+        <label for="p1">Taxa A (%)</label>
+        <input type="number" id="p1" step="0.01" value="18" />
+        <label for="p2">Taxa B (%)</label>
+        <input type="number" id="p2" step="0.01" value="22" />
+        <label for="alpha">α</label>
+        <input type="number" id="alpha" step="0.01" value="0.05" />
+        <label for="power">Power</label>
+        <input type="number" id="power" step="0.01" value="0.8" />
+        <button id="calc-sample" class="btn" style="margin-left:8px;">Calcular</button>
+      </div>
+      <div id="sample-result" style="margin-top:8px;font-weight:600;"></div>
+    </div>
     <div class="cards" id="cards-container">
       <!-- Cards serão injetados aqui -->
     </div>
@@ -206,6 +253,64 @@
     async function fetchStats(testName) {
       const resp = await getRequest({ action: 'stats', test_name: testName });
       return resp;
+    }
+
+    function normSInv(p) {
+      if (p < 0 || p > 1) return NaN;
+      if (p === 0) return -Infinity;
+      if (p === 1) return Infinity;
+      var a1 = -39.6968302866538,
+          a2 = 220.946098424521,
+          a3 = -275.928510446969,
+          a4 = 138.357751867269,
+          a5 = -30.6647980661472,
+          a6 = 2.50662827745924;
+      var b1 = -54.4760987982241,
+          b2 = 161.585836858041,
+          b3 = -155.698979859887,
+          b4 = 66.8013118877197,
+          b5 = -13.2806815528857;
+      var c1 = -0.00778489400243029,
+          c2 = -0.322396458041136,
+          c3 = -2.40075827716184,
+          c4 = -2.54973253934373,
+          c5 = 4.37466414146497,
+          c6 = 2.93816398269878;
+      var d1 = 0.00778469570904146,
+          d2 = 0.32246712907004,
+          d3 = 2.44513413714299,
+          d4 = 3.75440866190742;
+      var pLow = 0.02425,
+          pHigh = 1 - pLow;
+      var q, r, x;
+      if (p < pLow) {
+        q = Math.sqrt(-2 * Math.log(p));
+        x = ((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6;
+        x = x / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+        return -x;
+      }
+      if (p <= pHigh) {
+        q = p - 0.5;
+        r = q * q;
+        x = (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q;
+        x = x / (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1);
+        return x;
+      }
+      q = Math.sqrt(-2 * Math.log(1 - p));
+      x = ((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6;
+      x = x / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+      return x;
+    }
+
+    function calculaTamanhoAmostra(p1, p2, alpha, power) {
+      var zAlpha2 = normSInv(1 - alpha / 2);
+      var zBeta = normSInv(power);
+      var pBar = (p1 + p2) / 2;
+      var delta = Math.abs(p2 - p1);
+      var termo1 = zAlpha2 * Math.sqrt(2 * pBar * (1 - pBar));
+      var termo2 = zBeta * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2));
+      var n = Math.pow(termo1 + termo2, 2) / Math.pow(delta, 2);
+      return Math.ceil(n);
     }
 
     function createCard(test, stats) {
@@ -330,6 +435,17 @@
       const data = await getRequest({ action: 'stats', test_name: name });
       alert(JSON.stringify(data, null, 2));
     }
+
+    document.getElementById('calc-sample').addEventListener('click', () => {
+      const p1 = parseFloat(document.getElementById('p1').value) / 100;
+      const p2 = parseFloat(document.getElementById('p2').value) / 100;
+      const alpha = parseFloat(document.getElementById('alpha').value);
+      const power = parseFloat(document.getElementById('power').value);
+      if (isNaN(p1) || isNaN(p2) || isNaN(alpha) || isNaN(power)) return;
+      const n = calculaTamanhoAmostra(p1, p2, alpha, power);
+      document.getElementById('sample-result').textContent =
+        'Tamanho da amostra por variação: ' + n;
+    });
 
     document.getElementById('status-filter').addEventListener('change', renderDashboard);
     document.getElementById('auto-update').addEventListener('change', (e) => {
