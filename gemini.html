@@ -829,9 +829,17 @@
       card.classList.add(cardStatusClass);
 
       let visitasMinimas = null;
+      let progressoColeta = null;
       if (originalStats.success && variantsArray.length > 1) {
         const props = variantsArray.map(v => v.conversionRate / 100);
         visitasMinimas = calculaTamanhoMultiVariantes(props, 0.01, 0.90);
+
+        if (visitasMinimas) {
+          const totalNecessario = visitasMinimas * variantsArray.length;
+          if (totalNecessario > 0) {
+            progressoColeta = Math.min(100, (totalVisitorsDisplay / totalNecessario) * 100);
+          }
+        }
       }
 
       const displayTestName = String(test.testName || 'Teste sem nome');
@@ -860,6 +868,19 @@
               <span class="text-sm font-medium text-gray-600">Visitas mínimas por variante (99% conf., 90% poder):</span>
               <span class="text-sm font-bold text-gray-800">${visitasMinimas}</span>
             </div>`;
+
+          if (progressoColeta !== null) {
+            bodyHTML += `
+              <div class="mb-2">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-sm font-medium text-gray-600">Amostra coletada:</span>
+                  <span class="text-sm font-bold text-gray-800">${progressoColeta.toFixed(1)}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                  <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${progressoColeta}%"></div>
+                </div>
+              </div>`;
+          }
         }
         bodyHTML += `
           <div>
