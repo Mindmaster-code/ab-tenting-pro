@@ -291,6 +291,78 @@
 
     const chartInstances = {};
 
+    // --- Statistical Helper Functions ---
+    function normSInv(p) {
+      if (p < 0 || p > 1) return NaN;
+      if (p === 0) return -Infinity;
+      if (p === 1) return Infinity;
+      var a1 = -39.6968302866538,
+          a2 = 220.946098424521,
+          a3 = -275.928510446969,
+          a4 = 138.357751867269,
+          a5 = -30.6647980661472,
+          a6 = 2.50662827745924;
+      var b1 = -54.4760987982241,
+          b2 = 161.585836858041,
+          b3 = -155.698979859887,
+          b4 = 66.8013118877197,
+          b5 = -13.2806815528857;
+      var c1 = -0.00778489400243029,
+          c2 = -0.322396458041136,
+          c3 = -2.40075827716184,
+          c4 = -2.54973253934373,
+          c5 = 4.37466414146497,
+          c6 = 2.93816398269878;
+      var d1 = 0.00778469570904146,
+          d2 = 0.32246712907004,
+          d3 = 2.44513413714299,
+          d4 = 3.75440866190742;
+      var pLow = 0.02425,
+          pHigh = 1 - pLow;
+      var q, r, x;
+      if (p < pLow) {
+        q = Math.sqrt(-2 * Math.log(p));
+        x = ((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6;
+        x = x / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+        return -x;
+      }
+      if (p <= pHigh) {
+        q = p - 0.5;
+        r = q * q;
+        x = (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q;
+        x = x / (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1);
+        return x;
+      }
+      q = Math.sqrt(-2 * Math.log(1 - p));
+      x = ((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6;
+      x = x / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+      return x;
+    }
+
+    function calculaTamanhoAmostra(p1, p2, alpha, power) {
+      var zAlpha2 = normSInv(1 - alpha / 2);
+      var zBeta = normSInv(power);
+      var pBar = (p1 + p2) / 2;
+      var delta = Math.abs(p2 - p1);
+      var termo1 = zAlpha2 * Math.sqrt(2 * pBar * (1 - pBar));
+      var termo2 = zBeta * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2));
+      var n = Math.pow(termo1 + termo2, 2) / Math.pow(delta, 2);
+      return Math.ceil(n);
+    }
+
+    function calculaTamanhoMultiVariantes(proporcoes, alpha, power) {
+      if (!Array.isArray(proporcoes) || proporcoes.length < 2) return 0;
+      const pControle = proporcoes[0];
+      const numComparisons = proporcoes.length - 1;
+      const alphaAdj = alpha / numComparisons;
+      let maxN = 0;
+      for (let i = 1; i < proporcoes.length; i++) {
+        const n = calculaTamanhoAmostra(pControle, proporcoes[i], alphaAdj, power);
+        if (n > maxN) maxN = n;
+      }
+      return Math.ceil(maxN);
+    }
+
     // --- API Fetching Functions ---
     async function getRequest(params) {
       const cacheBuster = `cb=${new Date().getTime()}`;
@@ -756,6 +828,20 @@
       }
       card.classList.add(cardStatusClass);
 
+      let visitasMinimas = null;
+      let progressoColeta = null;
+      if (originalStats.success && variantsArray.length > 1) {
+        const props = variantsArray.map(v => v.conversionRate / 100);
+        visitasMinimas = calculaTamanhoMultiVariantes(props, 0.01, 0.90);
+
+        if (visitasMinimas) {
+          const totalNecessario = visitasMinimas * variantsArray.length;
+          if (totalNecessario > 0) {
+            progressoColeta = Math.min(100, (totalVisitorsDisplay / totalNecessario) * 100);
+          }
+        }
+      }
+
       const displayTestName = String(test.testName || 'Teste sem nome');
       const testStatusDisplay = String(test.status || 'Desconhecido');
       const totalVisitorsDisplay = (typeof originalStats?.totalVisitors === 'number') ? originalStats.totalVisitors : 0;
@@ -776,6 +862,26 @@
 
       let bodyHTML = '<div class="p-5 flex-grow">';
       if (originalStats.success && variantsArray.length > 0) {
+        if (visitasMinimas) {
+          bodyHTML += `
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm font-medium text-gray-600">Visitas mínimas por variante (99% conf., 90% poder):</span>
+              <span class="text-sm font-bold text-gray-800">${visitasMinimas}</span>
+            </div>`;
+
+          if (progressoColeta !== null) {
+            bodyHTML += `
+              <div class="mb-2">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-sm font-medium text-gray-600">Amostra coletada:</span>
+                  <span class="text-sm font-bold text-gray-800">${progressoColeta.toFixed(1)}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                  <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${progressoColeta}%"></div>
+                </div>
+              </div>`;
+          }
+        }
         bodyHTML += `
           <div>
             <div class="flex justify-between items-center mb-1">
