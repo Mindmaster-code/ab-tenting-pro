@@ -113,6 +113,19 @@
       <p class="text-lg text-gray-500">Resultados, gerenciamento e snippets de implementação dos seus experimentos.</p>
     </header>
 
+    <div id="calibration-controls" class="mb-6 flex flex-col md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-6">
+      <div class="flex items-center space-x-2">
+        <label for="confidenceRange" class="text-sm font-medium text-gray-600">Confiança (%)</label>
+        <input type="range" id="confidenceRange" min="80" max="99" step="1" value="90" class="w-40">
+        <span id="confidenceValue" class="text-sm font-semibold text-gray-800">90%</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <label for="powerRange" class="text-sm font-medium text-gray-600">Poder (%)</label>
+        <input type="range" id="powerRange" min="80" max="99" step="1" value="90" class="w-40">
+        <span id="powerValue" class="text-sm font-semibold text-gray-800">90%</span>
+      </div>
+    </div>
+
     <div id="loading-indicator" class="text-center py-10">
       <svg class="animate-spin h-10 w-10 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -288,6 +301,31 @@
     const closeCodeSnippetModalBtn = document.getElementById('close-code-snippet-modal-btn');
     const codeSnippetModalBody = document.getElementById('code-snippet-modal-body');
     const backToManageBtn = document.getElementById('back-to-manage-btn');
+
+    // Calibration Controls
+    const confidenceRange = document.getElementById('confidenceRange');
+    const confidenceValue = document.getElementById('confidenceValue');
+    const powerRange = document.getElementById('powerRange');
+    const powerValue = document.getElementById('powerValue');
+
+    let currentConfidence = parseInt(confidenceRange?.value || '90', 10);
+    let currentPower = parseInt(powerRange?.value || '90', 10);
+
+    confidenceRange.addEventListener('input', () => {
+      confidenceValue.textContent = `${confidenceRange.value}%`;
+    });
+    confidenceRange.addEventListener('change', () => {
+      currentConfidence = parseInt(confidenceRange.value, 10);
+      renderDashboard();
+    });
+
+    powerRange.addEventListener('input', () => {
+      powerValue.textContent = `${powerRange.value}%`;
+    });
+    powerRange.addEventListener('change', () => {
+      currentPower = parseInt(powerRange.value, 10);
+      renderDashboard();
+    });
 
     const chartInstances = {};
 
@@ -837,7 +875,8 @@
       let progressoColeta = null;
       if (originalStats.success && variantsArray.length > 1) {
         const props = variantsArray.map(v => v.conversionRate / 100);
-        visitasMinimas = calculaTamanhoMultiVariantes(props, 0.01, 0.90);
+        const alpha = 1 - currentConfidence / 100;
+        visitasMinimas = calculaTamanhoMultiVariantes(props, alpha, currentPower / 100);
 
         if (visitasMinimas) {
           const totalNecessario = visitasMinimas * variantsArray.length;
@@ -865,7 +904,7 @@
         if (visitasMinimas) {
           bodyHTML += `
             <div class="flex justify-between items-center mb-2">
-              <span class="text-sm font-medium text-gray-600">Visitas mínimas por variante (99% conf., 90% poder):</span>
+              <span class="text-sm font-medium text-gray-600">Visitas mínimas por variante (${currentConfidence}% conf., ${currentPower}% poder):</span>
               <span class="text-sm font-bold text-gray-800">${visitasMinimas}</span>
             </div>`;
 
