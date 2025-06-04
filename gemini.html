@@ -828,6 +828,7 @@
       }
       card.classList.add(cardStatusClass);
 
+      // Display variables must be defined before any progress calculations
       const displayTestName = String(test.testName || 'Teste sem nome');
       const testStatusDisplay = String(test.status || 'Desconhecido');
       const totalVisitorsDisplay = (typeof originalStats?.totalVisitors === 'number') ? originalStats.totalVisitors : 0;
