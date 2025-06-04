@@ -299,7 +299,7 @@
       q = Math.sqrt(-2 * Math.log(1 - p));
       x = ((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6;
       x = x / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
-      return x;
+      return -x; // Corrige sinal para região de cauda superior
     }
 
     function calculaTamanhoAmostra(p1, p2, alpha, power) {
